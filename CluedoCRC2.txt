@@ -1,0 +1,31 @@
+Game Board
+  deal cards - Weapon, Character, Room
+  manage turns - Player
+  display game - Room, Square
+
+Room
+  contains weapon - Weapon
+  contains character - Character
+  exits - Square
+
+Square
+  transport of players - Room, Player
+
+Character
+  identity - Player
+  visibility - Player
+
+Weapon
+  identity - Player
+  visibility - Player
+
+Player
+  location - Square, Room
+  accusation - Game Board, Character, Weapon
+  suggestion - Room, Character, Weapon
+  move - Square, Room
+
+Notes: square is too different from room for room to be classed as or behave 
+    like a square, but could be abstracted as an empty interface called Place.
+    Doors complicate the model too much.
+
