@@ -1,0 +1,29 @@
+Game Board
+  deal cards - Card, Player
+  manage turns - Player
+  display game - Place
+
+Place
+  location - Game Board
+  move - Player
+    Room
+      suggestion - Player, Card
+    Square
+    
+
+Card
+  identity - Player
+  visibility - Player  
+    Character
+    Weapon
+    Room
+
+Player
+  accusation - (Character, Weapon) Card
+
+Notes: square is too different from room for room to be classed as or behave 
+    like a square, but could be abstracted as an empty interface called Place. 
+    Characters and Weapons only responsibilities are as identifiers, hense Card.
+    Excluding tracking of anything as a responsibility as iralivant at this
+    stage.
+    

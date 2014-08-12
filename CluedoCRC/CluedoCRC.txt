@@ -1,0 +1,30 @@
+GameBoard
+  randomDistribution - Card Player
+  manageTurns - Player
+
+Room
+  hasWeapon - Weapon
+  hasCharacter - Character
+  exit - Door
+
+Door
+  enter - Square
+  exit - Room
+
+Character
+  isMurderer - Player
+
+Weapon
+  isMurderWeapon - Player
+
+Square
+  directions
+
+Player
+  location - Square Room
+  accusation - GameBoard
+  suggestion - Room
+  move - Square Room
+
+Notes: square is too different from room for room to be classed as or behave 
+like a square. 
