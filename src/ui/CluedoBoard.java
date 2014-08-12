@@ -2,6 +2,8 @@ package ui;
 
 import game.Place;
 import game.Player;
+import game.Room;
+import game.Square;
 import identities.Cards;
 
 import java.awt.Color;
@@ -12,6 +14,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.management.RuntimeErrorException;
 import javax.swing.JComponent;
 
 
@@ -19,32 +22,27 @@ import javax.swing.JComponent;
 public class CluedoBoard extends JComponent
 {
 	private char[][] tiles;
-	private Place[] startSquares = new Place[6];
+	private List<Point> startSquares = new LinkedList<Point>();
 	int height, width;
-	List<Point> players = new LinkedList<Point>();
+	private List<Point> players = new LinkedList<Point>();
+	private List<Point> centerArea = new LinkedList<Point>();
 	HashMap<Character, LinkedList<Point>> roomTiles = new HashMap<Character, LinkedList<Point>>();
 	HashMap<Character, Color> colors = new HashMap<Character, Color>();
 
-	public CluedoBoard( char[][] board )
+	public CluedoBoard( char[][] board, int width, int height )
 	{
+		tiles = board;
 		int i = 0, j = 0;
+		char c;
 		Room[] rooms = new Room[9];
-		for( char[] ca: tiles )
+		List<Point> squares = new LinkedList<Point>();
+		for( j = 0; j < height; ++j )
 		{
-			for( char c: ca )
+			for( i = 0; i < width; ++i )
 			{
-				switch ( c )
-				{
-				case 'K' : // rooms
-				case 'B' :
-				case 'A' :
-				case 'C' :
-				case 'L' :
-				case 'H' :
-				case 'U' :
-				case 'N' :
-				case 'I' :
-				{
+				c = board[i][j];
+				if ( isRoom( c ) )
+				{	// rooms
 					LinkedList<Point> points = roomTiles.get( c );
 					if ( points == null )
 						roomTiles.put( c, new LinkedList<Point>( Arrays.asList( new Point( i, j ) ) ) );
@@ -53,24 +51,52 @@ public class CluedoBoard extends JComponent
 						points.add( new Point( i, j ) );
 						roomTiles.put( c, points );
 					}
-					
-					break; // end rooms
-				}
-				case 'P' : // passage
-				case 'd' : // doors are
-				case 'D' :
-
-				case 'X' : // squares
-				case 'S' :
-				case '?' :
-				}
-				++i;
+				} else if ( c == 'P' || c == 'd' || c == 'D' )
+				{
+					char ch = findRoomType( i, j );
+					LinkedList<Point> points = roomTiles.get( ch );
+					if ( points == null )
+						roomTiles.put( ch, new LinkedList<Point>( Arrays.asList( new Point( i, j ) ) ) );
+					else
+					{
+						points.add( new Point( i, j ) );
+						roomTiles.put( ch, points );
+					}
+				} else if ( c == 'X' )
+				{
+					squares.add( new Point( i, j ) );
+					startSquares.add( new Point( i, j ) );
+				} else if ( c == 'S' )
+					squares.add( new Point( i, j ) );
+				else if ( c == '?' )
+					centerArea.add( new Point( i, j ) );
+				else throw new RuntimeException( "Map contains a wrong char (" + i + ", " + j + ")");
 			}
-			i = 0;
-			++j;
 		}
-		tiles = board;
-
+		// create and connect places
+	}
+	private boolean isRoom( char c )
+	{
+		switch ( c )
+		{
+		case 'K' :
+		case 'B' :
+		case 'A' :
+		case 'C' :
+		case 'L' :
+		case 'H' :
+		case 'U' :
+		case 'N' :
+		case 'I' :
+			return true;
+		}
+		return false;
+	}
+	private char findRoomType( int x, int y )
+	{
+		if ( x >= 0 && tiles[x-1][y] != 'S' && tiles[x-1][y] != 'W' )
+			return tiles[x-1][y];
+		return tiles[x+1][y];
 	}
 	public void start()
 	{
