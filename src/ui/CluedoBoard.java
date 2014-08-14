@@ -288,6 +288,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 97.84375000, -183.25000000 );
 		gp.closePath();
 		g.draw( gp );
+		g.translate( -tx, -ty );
 	}
 
 	private void drawDagger( Graphics2D g, int tx, int ty )
@@ -303,6 +304,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 79.93652100, -129.79535000 );
 		gp.closePath();
 		g.draw( gp );
+		g.translate( -tx, -ty );
 	}
 
 	private void drawRevolver( Graphics2D g, int tx, int ty )
@@ -320,6 +322,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 42.62646800, -74.47348000 );
 		gp.closePath();
 		g.draw( gp );
+		g.translate( -tx, -ty );
 	}
 
 	private void drawRope( Graphics2D g, int tx, int ty )
@@ -462,6 +465,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 110.74433000, -83.18498000 );
 		gp.closePath();
 		g.draw( gp );
+		g.translate( -tx, -ty );
 	}
 
 	private void drawSpanner( Graphics2D g, int tx, int ty )
@@ -488,6 +492,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 52.92401600, -180.04187000 );
 		gp.closePath();
 		g.draw( gp );
+		g.translate( -tx, -ty );
 	}
 
 	private void drawleadPipe( Graphics2D g, int tx, int ty )
@@ -506,6 +511,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 88.43956100, -183.84396000 );
 		gp.closePath();
 		g.draw( gp );
+		g.translate( -tx, -ty );
 	}
 
 	private void drawPawn( Graphics2D g, int tx, int ty )
@@ -532,5 +538,6 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 99.93750000, -199.93750000 );
 		gp.closePath();
 		g.draw( gp );
+		g.translate( -tx, -ty );
 	}
 }
