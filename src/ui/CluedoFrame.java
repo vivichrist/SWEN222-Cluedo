@@ -1,4 +1,6 @@
 package ui;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GraphicsConfiguration;
 import java.awt.HeadlessException;
 import java.awt.event.KeyListener;
@@ -14,18 +16,25 @@ import javax.swing.JFrame;
 @SuppressWarnings( "serial" )
 public class CluedoFrame extends JFrame
 {
+	
 	public CluedoFrame()
 	{
 		super( "Cluedo" );
+		setLayout( new BorderLayout() );// use border layout
 		try
 		{
-			add( new CluedoBoard( createBoardFromFile( "map.txt" ) ) );
+			char[][] board = createBoardFromFile( "map.txt" );
+			CluedoBoard cluedo = new CluedoBoard( board );
+			add( cluedo, BorderLayout.CENTER );
 		} catch ( IOException e )
 		{
 			e.printStackTrace();
 		}
-		// show window...
-
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		pack();
+		setResizable(false);
+		// prevent us from being resize-able
+		setVisible( true );
 	}
 
 	private static char[][] createBoardFromFile( String filename ) throws IOException
@@ -33,15 +42,21 @@ public class CluedoFrame extends JFrame
 		FileReader fr = new FileReader(filename);
 		BufferedReader br = new BufferedReader(fr);
 		LinkedList<LinkedList<Character>> map = new LinkedList<LinkedList<Character>>();
-		map.add( new LinkedList<Character>() );
 		int width = -1;
-		int ch = 0;
-		while( ch != -1 )
+		int ch  = br.read();
+		if ( ch == -1 ) 
 		{
-			while ( (ch = br.read()) != '\n' && ch != -1) map.getLast().add( (char) ch );
+			br.close();fr.close();
+			throw new IllegalArgumentException("Input file \"" + filename + "\" is empty");
+		}
+		do
+		{
 			map.add( new LinkedList<Character>() );
-			// now sanity check
-
+			while ( ch != '\n')
+			{
+				map.getLast().add( (char) ch );
+				ch  = br.read();
+			}
 			if( width == -1 )
 			{
 				width = map.getLast().size();
@@ -51,16 +66,18 @@ public class CluedoFrame extends JFrame
 				throw new IllegalArgumentException("Input file \"" + filename
 						+ "\" is malformed; line " + map.size() + " incorrect width.");
 			}
-		}
+			ch  = br.read();
+		} while( ch != -1 );
+		map.removeLast();
 		br.close();
 		fr.close();
 		int i = 0, j = 0;
-		char[][] board = new char[ map.size() ][ map.getFirst().size() ];
+		char[][] board = new char[ map.getFirst().size() ][ map.size() ];
 		for ( LinkedList<Character> line: map )
 		{
-			for ( char c: line )
+			if ( !line.isEmpty() ) for ( char c: line )
 			{
-				board[j][i] = c;
+				board[i][j] = c;
 				++i;
 			}
 			++j;
