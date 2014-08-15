@@ -213,13 +213,14 @@ public class CluedoBoard extends JComponent
 					drawSquare( (Graphics2D) g );
 				}
 				else 
-				{
+				{ // draw wall
 					g.setColor( Color.BLACK );
 					g.fillRect( 0, 0, tileW, tileH );
 				}
 				g.translate( -i * tileW, -j * tileH );
 			}
 		}
+		// TODO: draw weapons and players
 	}
 	
 	private boolean testForWalls( char test, int i, int j )
@@ -548,4 +549,5 @@ public class CluedoBoard extends JComponent
 		g.draw( gp );
 		g.translate( -tx, -ty );
 	}
+	// TODO: make secret passage graphic
 }
