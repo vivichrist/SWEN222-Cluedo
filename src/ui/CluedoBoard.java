@@ -288,6 +288,7 @@ public class CluedoBoard extends JComponent
 				97.84375000, -183.25000000 );
 		gp.lineTo( 97.84375000, -183.25000000 );
 		gp.closePath();
+		gp.transform( AffineTransform.getScaleInstance( 0.1d, 0.1f ) );
 		g.draw( gp );
 		g.translate( -tx, -ty );
 	}
@@ -304,6 +305,7 @@ public class CluedoBoard extends JComponent
 				84.38794800, -9.93658000 );
 		gp.lineTo( 79.93652100, -129.79535000 );
 		gp.closePath();
+		gp.transform( AffineTransform.getScaleInstance( 0.1d, 0.1f ) );
 		g.draw( gp );
 		g.translate( -tx, -ty );
 	}
@@ -322,6 +324,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 116.43337000, -191.11467000 );
 		gp.lineTo( 42.62646800, -74.47348000 );
 		gp.closePath();
+		gp.transform( AffineTransform.getScaleInstance( 0.1d, 0.1f ) );
 		g.draw( gp );
 		g.translate( -tx, -ty );
 	}
@@ -465,6 +468,7 @@ public class CluedoBoard extends JComponent
 				110.74433000, -83.18495000 );
 		gp.lineTo( 110.74433000, -83.18498000 );
 		gp.closePath();
+		gp.transform( AffineTransform.getScaleInstance( 0.1d, 0.1f ) );
 		g.draw( gp );
 		g.translate( -tx, -ty );
 	}
@@ -492,6 +496,7 @@ public class CluedoBoard extends JComponent
 				52.92401600, -180.04187000 );
 		gp.lineTo( 52.92401600, -180.04187000 );
 		gp.closePath();
+		gp.transform( AffineTransform.getScaleInstance( 0.1d, 0.1f ) );
 		g.draw( gp );
 		g.translate( -tx, -ty );
 	}
@@ -511,6 +516,7 @@ public class CluedoBoard extends JComponent
 				88.43956100, -183.84396000 );
 		gp.lineTo( 88.43956100, -183.84396000 );
 		gp.closePath();
+		gp.transform( AffineTransform.getScaleInstance( 0.1d, 0.1f ) );
 		g.draw( gp );
 		g.translate( -tx, -ty );
 	}
@@ -538,6 +544,7 @@ public class CluedoBoard extends JComponent
 				99.93750000, -199.93750000 );
 		gp.lineTo( 99.93750000, -199.93750000 );
 		gp.closePath();
+		gp.transform( AffineTransform.getScaleInstance( 0.1d, 0.1f ) );
 		g.draw( gp );
 		g.translate( -tx, -ty );
 	}
