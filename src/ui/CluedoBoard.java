@@ -40,8 +40,8 @@ public class CluedoBoard extends JComponent
 	public CluedoBoard( char[][] board )
 	{
 		tiles = board;
-		this.height = board.length; 
-		this.width = board[0].length;
+		this.height = board[0].length; 
+		this.width = board.length;
 		System.out.println( "width:"+width+" height:"+height );
 		tileH = 20;
 		tileW = 20;
@@ -177,6 +177,7 @@ public class CluedoBoard extends JComponent
 		Rectangle r = g.getClipBounds();
 		g.fillRect( r.x, r.y, r.width, r.height );
 		int i, j;
+		// draw mansion
 		for ( i = 0; i < width; ++i )
 		{
 			for ( j = 0; j < height; ++j )
@@ -231,7 +232,7 @@ public class CluedoBoard extends JComponent
 	@Transient
 	public Dimension getPreferredSize()
 	{
-		return new Dimension( (width + 1) * tileW, (height + 1)* tileH );
+		return new Dimension( width * tileW, height * tileH );
 	}
 
 	private void drawSquare( Graphics2D g )

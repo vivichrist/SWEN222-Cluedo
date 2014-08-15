@@ -51,24 +51,24 @@ public class CluedoFrame extends JFrame
 		}
 		do
 		{
-			map.add( new LinkedList<Character>() );
+			LinkedList<Character> line = new LinkedList<Character>();
 			while ( ch != '\n')
 			{
-				map.getLast().add( (char) ch );
+				line.add( (char) ch );
 				ch  = br.read();
 			}
 			if( width == -1 )
 			{
-				width = map.getLast().size();
-			} else if( width != map.getLast().size() )
+				width = line.size();
+			} else if( width != line.size() )
 			{
 				br.close();fr.close();
 				throw new IllegalArgumentException("Input file \"" + filename
 						+ "\" is malformed; line " + map.size() + " incorrect width.");
 			}
+			map.add( line );
 			ch  = br.read();
 		} while( ch != -1 );
-		map.removeLast();
 		br.close();
 		fr.close();
 		int i = 0, j = 0;
