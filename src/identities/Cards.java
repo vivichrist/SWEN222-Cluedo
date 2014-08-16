@@ -42,6 +42,33 @@ public enum Cards
 		this.name = value;
 		this.type = t;
 	}
+	public static Cards roomID( char c )
+	{
+		switch ( c )
+		{
+		case 'K':
+			return KITCHEN;
+		case 'B':
+			return BILLIARDROOM;
+		case 'A':
+			return BALLROOM;
+		case 'C':
+			return CONSERVATORY;
+		case 'L':
+			return LOUNGE;
+		case 'H':
+			return HALL;
+		case 'U':
+			return STUDY;
+		case 'N':
+			return DININGROOM;
+		case 'I':
+			return LIBRARY;
+		}
+		return HIDDEN;
+
+	}
+
 	public boolean addVisibility( Player player )
 	{
 		return visibility.add( player );

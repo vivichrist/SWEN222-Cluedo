@@ -4,6 +4,7 @@ import java.util.List;
 
 public interface Place
 {
+	public void connectTo( Place neighbour );
 	/**************************************************************************
 	 * Mark places where the player can move to through propagation, so that
 	 * the UI can show valid moves and the user can click on those places and

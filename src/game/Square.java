@@ -8,7 +8,7 @@ import java.util.List;
 public class Square implements Place
 {
 	public final Point location; // centre
-	public final Place[] adjacent;
+	public List<Place> adjacent;
 	private Player occupant = null;
 	private boolean move = false;
 
@@ -16,10 +16,10 @@ public class Square implements Place
 	{
 		return location;
 	}
-	public Square( int x, int y, Place[] places )
+	public Square( Point p )
 	{
-		location = new Point(x, y);
-		adjacent = Arrays.copyOf( places, places.length );
+		location = p;
+		adjacent = new LinkedList<Place>();
 	}
 	@Override
 	public List<Place> mark( int moves )
@@ -69,5 +69,12 @@ public class Square implements Place
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public void connectTo( Place neighbour )
+	{
+		if ( !adjacent.contains(neighbour) )
+			adjacent.add( neighbour );
 	}
 }
