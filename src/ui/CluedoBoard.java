@@ -11,6 +11,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.util.Arrays;
@@ -19,6 +20,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JComponent;
 
@@ -31,6 +33,7 @@ public class CluedoBoard extends JComponent
 	private int										tileW, tileH, height,
 			width;
 	private HashMap<Cards, Character>				weaponRooms		= new HashMap<Cards, Character>();
+	private HashMap<Cards, Point>					playerPos		= new HashMap<Cards, Point>();
 	private HashMap<Character, Point>				roomCenters		= new HashMap<Character, Point>();
 	private List<Point>								centerArea		= new LinkedList<Point>();
 	private HashMap<Character, LinkedList<Point>>	roomTiles		= new HashMap<Character, LinkedList<Point>>();
@@ -44,10 +47,13 @@ public class CluedoBoard extends JComponent
 		this.height = board[ 0 ].length;
 		this.width = board.length;
 		System.out.println( "width:" + width + " height:" + height );
-		tileH = 20;
-		tileW = 20;
-		transform = AffineTransform.getScaleInstance( tileW / 200.0f,
-				tileH / 200.0f );
+		tileH = 25;
+		tileW = 25;
+		transform = AffineTransform.getScaleInstance( (tileW - 1) / 200.0f,
+				(tileH - 1) / 200.0f );
+		transform
+				.concatenate( AffineTransform.getTranslateInstance( 200, 200 ) );
+		transform.concatenate( AffineTransform.getRotateInstance( Math.PI ) );
 		int i = 0, j = 0;
 		char c;
 		HashMap<Character, LinkedList<Point>> doors = new HashMap<Character, LinkedList<Point>>();
@@ -139,11 +145,13 @@ public class CluedoBoard extends JComponent
 			{
 				leastx = p.x < leastx ? p.x : leastx;
 				leasty = p.y < leasty ? p.y : leasty;
-				mostx = p.x > mosty ? p.x : mostx;
+				mostx = p.x > mostx ? p.x : mostx;
 				mosty = p.y > mosty ? p.y : mosty;
 			}
 			// connect the room to squares (through doors mapping)
-			Point p = new Point( ((mostx - leastx) / 2), ((mosty - leasty) / 2) );
+			System.out.println( "mx:" + mostx + " lx:"+leastx+" my:"+mosty+" ly:" + leasty );
+			Point p = new Point( ((mostx - leastx) / 2) + leastx, ((mosty - leasty) / 2) + leasty );
+			System.out.println( p );
 			Room r = new Room( p.x, p.y, Cards.roomID( ch ) );
 			for ( Point sp : doors.get( ch ) )
 			{
@@ -162,7 +170,7 @@ public class CluedoBoard extends JComponent
 					@Override
 					public int compare( Point o1, Point o2 )
 					{
-						return o2.distance( pt ) <= o1.distance( pt ) ? -1 : 1;
+						return o2.distance( pt ) >= o1.distance( pt ) ? 1 : -1;
 					}
 				} );
 			}
@@ -212,9 +220,9 @@ public class CluedoBoard extends JComponent
 	{
 		LinkedList<Point> points = map.get( c );
 		if ( points == null )
-			map.put( c,
+		{	map.put( c,
 					new LinkedList<Point>( Arrays.asList( new Point( x, y ) ) ) );
-		else
+		} else
 		{
 			points.add( new Point( x, y ) );
 			map.put( c, points );
@@ -282,9 +290,17 @@ public class CluedoBoard extends JComponent
 	}
 
 	@Override
-	protected void paintComponent( Graphics g )
+	protected void paintComponent( Graphics gr )
 	{
-		super.paintComponent( g );
+		super.paintComponent( gr );
+		Graphics2D g = (Graphics2D) gr;
+		RenderingHints rh = new RenderingHints(
+	             RenderingHints.KEY_TEXT_ANTIALIASING,
+	             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		rh.add( new RenderingHints(
+	             RenderingHints.KEY_ALPHA_INTERPOLATION,
+	             RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY) );
+		g.setRenderingHints(rh);
 		g.setColor( Color.DARK_GRAY );
 		Rectangle r = g.getClipBounds();
 		g.fillRect( r.x, r.y, r.width, r.height );
@@ -367,9 +383,10 @@ public class CluedoBoard extends JComponent
 				(int) (b.height * 0.87f) );
 		g.drawString( Cards.STUDY.name(), (int) (b.width * 0.82f),
 				(int) (b.height * 0.94f) );
-		// draw weapons and players
-		Point p = 
-			roomTiles.get( weaponRooms.get( Cards.CANDLESTICK ) ).getFirst();
+		// draw weapons
+		g.setColor( Color.GRAY );
+		Point p = roomTiles.get( weaponRooms.get( Cards.CANDLESTICK ) )
+				.getFirst();
 		drawCandelStick( (Graphics2D) g, p.x * tileW, p.y * tileH );
 		p = roomTiles.get( weaponRooms.get( Cards.DAGGER ) ).getFirst();
 		drawDagger( (Graphics2D) g, p.x * tileW, p.y * tileH );
@@ -381,6 +398,26 @@ public class CluedoBoard extends JComponent
 		drawRope( (Graphics2D) g, p.x * tileW, p.y * tileH );
 		p = roomTiles.get( weaponRooms.get( Cards.SPANNER ) ).getFirst();
 		drawSpanner( (Graphics2D) g, p.x * tileW, p.y * tileH );
+		// draw players
+		if ( playerPos.size() == 6 )
+		{
+			p = playerPos.get( Cards.COLONELMUSTARD );
+			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH,
+					Color.decode( "#FFDB58" ) );
+			p = playerPos.get( Cards.MISSSCARLETT );
+			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH,
+					Color.decode( "#FF2400" ) );
+			p = playerPos.get( Cards.MRSPEACOCK );
+			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH,
+					Color.decode( "#0c59c3" ) );
+			p = playerPos.get( Cards.PROFESSORPLUM );
+			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH,
+					Color.decode( "#663393" ) );
+			p = playerPos.get( Cards.MRSWHITE );
+			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH, Color.WHITE );
+			p = playerPos.get( Cards.THEREVERENDGREEN );
+			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH, Color.GREEN );
+		}
 	}
 
 	private boolean testForWalls( char test, int i, int j )
@@ -450,6 +487,8 @@ public class CluedoBoard extends JComponent
 		gp.closePath();
 		gp.transform( transform );
 		g.draw( gp );
+		g.setColor( Color.YELLOW );
+		g.fill( gp );
 		g.translate( -tx, -ty );
 	}
 
@@ -457,16 +496,37 @@ public class CluedoBoard extends JComponent
 	{
 		g.translate( tx, ty );
 		GeneralPath gp = new GeneralPath();
-		gp.moveTo( 79.93652100, 129.79535000 );
-		gp.lineTo( 104.41936000, 129.79535000 );
-		gp.curveTo( 104.55478000, 104.11131000, 102.91276000, 65.58526000,
-				97.74222900, 39.90118000 );
-		gp.curveTo( 94.72093500, 27.16248000, 89.88539200, 17.91298000,
-				84.38794800, 9.93658000 );
-		gp.lineTo( 79.93652100, 129.79535000 );
+		gp.moveTo( 69.22524900, 114.95104602 );
+		gp.lineTo( 95.63170711, 138.59115632 );
+		gp.curveTo( 122.73056012, 113.23255027, 161.38870553, 73.41301338,
+				182.76476042, 42.93105383 );
+		gp.curveTo( 192.87405572, 27.37161090, 197.36499504, 13.52312079,
+				199.80603851, 0.29896349 );
+		gp.lineTo( 69.22524900, 114.95104602 );
+		gp.closePath();
+		gp.moveTo( 0.86805365, 179.72276353 );
+		gp.lineTo( 22.43945565, 199.03433953 );
+		gp.curveTo( 25.44206241, 192.06297436, 28.32282635, 184.98253065,
+				38.18043315, 184.14803383 );
+		gp.curveTo( 38.54873370, 172.34076964, 46.74732389, 171.51997476,
+				53.92141065, 169.26172813 );
+		gp.curveTo( 55.76764850, 162.92873600, 57.15162083, 156.40939822,
+				69.66238815, 154.37542243 );
+		gp.curveTo( 72.52236653, 145.16714208, 78.49678211, 141.49902680,
+				85.40336565, 139.48911673 );
+		gp.lineTo( 63.83196365, 120.17754073 );
+		gp.lineTo( 0.86805365, 179.72276353 );
+		gp.closePath();
+		gp.moveTo( 58.43911315, 115.34964673 );
+		gp.lineTo( 96.18906665, 149.14490473 );
+		gp.lineTo( 101.43605915, 144.18280283 );
+		gp.lineTo( 63.68610565, 110.38754483 );
+		gp.lineTo( 58.43911315, 115.34964673 );
 		gp.closePath();
 		gp.transform( transform );
 		g.draw( gp );
+		g.setColor( Color.RED );
+		g.fill( gp );
 		g.translate( -tx, -ty );
 	}
 
@@ -486,6 +546,8 @@ public class CluedoBoard extends JComponent
 		gp.closePath();
 		gp.transform( transform );
 		g.draw( gp );
+		g.setColor( Color.BLACK );
+		g.fill( gp );
 		g.translate( -tx, -ty );
 	}
 
@@ -630,6 +692,8 @@ public class CluedoBoard extends JComponent
 		gp.closePath();
 		gp.transform( transform );
 		g.draw( gp );
+		g.setColor( Color.WHITE );
+		g.fill( gp );
 		g.translate( -tx, -ty );
 	}
 
@@ -637,73 +701,75 @@ public class CluedoBoard extends JComponent
 	{
 		g.translate( tx, ty );
 		GeneralPath gp = new GeneralPath();
-		gp.moveTo( 47.50000000, -185.00000000 );
-		gp.curveTo( 45.88005700, -185.00000000, 44.32431300, -184.80676200,
-				42.78125000, -184.56250000 );
-		gp.lineTo( 56.18750000, -169.81250000 );
-		gp.curveTo( 56.06653000, -168.39736800, 55.87352500, -167.08428300,
-				55.59375000, -165.84375000 );
-		gp.curveTo( 55.31397500, -164.60321700, 54.94024200, -163.43910500,
-				54.50000000, -162.37500000 );
-		gp.curveTo( 54.05975800, -161.31089500, 53.53987300, -160.32334900,
-				52.93750000, -159.43750000 );
-		gp.curveTo( 52.33512700, -158.55165100, 51.64116600, -157.76826400,
-				50.87500000, -157.06250000 );
-		gp.curveTo( 50.10883400, -156.35673600, 49.27537300, -155.74260100,
-				48.34375000, -155.21875000 );
-		gp.curveTo( 47.41212700, -154.69489900, 46.37999200, -154.24635900,
-				45.28125000, -153.90625000 );
-		gp.curveTo( 44.18250800, -153.56614100, 43.01752500, -153.34203800,
-				41.75000000, -153.18750000 );
-		gp.curveTo( 40.48247500, -153.03296200, 39.12547000, -152.96713900,
-				37.68750000, -153.00000000 );
-		gp.lineTo( 22.28125000, -169.93750000 );
-		gp.curveTo( 20.82185600, -166.88600700, 20.00000000, -163.53966900,
-				20.00000000, -160.00000000 );
-		gp.curveTo( 20.00000000, -146.19288100, 32.31216900, -135.00000000,
-				47.50000000, -135.00000000 );
-		gp.curveTo( 51.03480700, -135.00000000, 54.42694400, -135.61431700,
-				57.53125000, -136.71875000 );
-		gp.lineTo( 128.21875000, -52.81250000 );
-		gp.curveTo( 125.98558000, -49.19809000, 124.71875000, -45.03438000,
-				124.71875000, -40.59375000 );
-		gp.curveTo( 124.71875000, -26.78663000, 137.03092000, -15.59375000,
-				152.21875000, -15.59375000 );
-		gp.curveTo( 154.36815000, -15.59375000, 156.43004000, -15.85722000,
-				158.43750000, -16.28125000 );
-		gp.lineTo( 145.06250000, -30.93750000 );
-		gp.curveTo( 145.17958000, -32.35296000, 145.37988000, -33.66495000,
-				145.65625000, -34.90625000 );
-		gp.curveTo( 145.93262000, -36.14755000, 146.28143000, -37.30969000,
-				146.71875000, -38.37500000 );
-		gp.curveTo( 147.15607000, -39.44031000, 147.68131000, -40.42500000,
-				148.28125000, -41.31250000 );
-		gp.curveTo( 148.88119000, -42.20000000, 149.54827000, -42.97963000,
-				150.31250000, -43.68750000 );
-		gp.curveTo( 151.07673000, -44.39537000, 151.94482000, -45.03610000,
-				152.87500000, -45.56250000 );
-		gp.curveTo( 153.80518000, -46.08890000, 154.80845000, -46.50063000,
-				155.90625000, -46.84375000 );
-		gp.curveTo( 157.00405000, -47.18687000, 158.17040000, -47.46699000,
-				159.43750000, -47.62500000 );
-		gp.curveTo( 160.70460000, -47.78301000, 162.06195000, -47.84143000,
-				163.50000000, -47.81250000 );
-		gp.lineTo( 177.93750000, -32.00000000 );
-		gp.curveTo( 179.02942000, -34.69379000, 179.71875000, -37.55534000,
-				179.71875000, -40.59375000 );
-		gp.curveTo( 179.71875000, -54.40087000, 167.40658000, -65.59375000,
-				152.21875000, -65.59375000 );
-		gp.curveTo( 149.53016000, -65.59375000, 146.92476000, -65.24766000,
-				144.46875000, -64.59375000 );
-		gp.lineTo( 72.65625000, -149.87500000 );
-		gp.curveTo( 74.16712200, -152.97100000, 75.00000000, -156.39480800,
-				75.00000000, -160.00000000 );
-		gp.curveTo( 75.00000000, -173.80711900, 62.68783100, -185.00000000,
-				47.50000000, -185.00000000 );
-		gp.lineTo( 47.50000000, -185.00000000 );
+		gp.moveTo( 47.50000000, 185.00000000 );
+		gp.curveTo( 45.88005700, 185.00000000, 44.32431300, 184.80676200,
+				42.78125000, 184.56250000 );
+		gp.lineTo( 56.18750000, 169.81250000 );
+		gp.curveTo( 56.06653000, 168.39736800, 55.87352500, 167.08428300,
+				55.59375000, 165.84375000 );
+		gp.curveTo( 55.31397500, 164.60321700, 54.94024200, 163.43910500,
+				54.50000000, 162.37500000 );
+		gp.curveTo( 54.05975800, 161.31089500, 53.53987300, 160.32334900,
+				52.93750000, 159.43750000 );
+		gp.curveTo( 52.33512700, 158.55165100, 51.64116600, 157.76826400,
+				50.87500000, 157.06250000 );
+		gp.curveTo( 50.10883400, 156.35673600, 49.27537300, 155.74260100,
+				48.34375000, 155.21875000 );
+		gp.curveTo( 47.41212700, 154.69489900, 46.37999200, 154.24635900,
+				45.28125000, 153.90625000 );
+		gp.curveTo( 44.18250800, 153.56614100, 43.01752500, 153.34203800,
+				41.75000000, 153.18750000 );
+		gp.curveTo( 40.48247500, 153.03296200, 39.12547000, 152.96713900,
+				37.68750000, 153.00000000 );
+		gp.lineTo( 22.28125000, 169.93750000 );
+		gp.curveTo( 20.82185600, 166.88600700, 20.00000000, 163.53966900,
+				20.00000000, 160.00000000 );
+		gp.curveTo( 20.00000000, 146.19288100, 32.31216900, 135.00000000,
+				47.50000000, 135.00000000 );
+		gp.curveTo( 51.03480700, 135.00000000, 54.42694400, 135.61431700,
+				57.53125000, 136.71875000 );
+		gp.lineTo( 128.21875000, 52.81250000 );
+		gp.curveTo( 125.98558000, 49.19809000, 124.71875000, 45.03438000,
+				124.71875000, 40.59375000 );
+		gp.curveTo( 124.71875000, 26.78663000, 137.03092000, 15.59375000,
+				152.21875000, 15.59375000 );
+		gp.curveTo( 154.36815000, 15.59375000, 156.43004000, 15.85722000,
+				158.43750000, 16.28125000 );
+		gp.lineTo( 145.06250000, 30.93750000 );
+		gp.curveTo( 145.17958000, 32.35296000, 145.37988000, 33.66495000,
+				145.65625000, 34.90625000 );
+		gp.curveTo( 145.93262000, 36.14755000, 146.28143000, 37.30969000,
+				146.71875000, 38.37500000 );
+		gp.curveTo( 147.15607000, 39.44031000, 147.68131000, 40.42500000,
+				148.28125000, 41.31250000 );
+		gp.curveTo( 148.88119000, 42.20000000, 149.54827000, 42.97963000,
+				150.31250000, 43.68750000 );
+		gp.curveTo( 151.07673000, 44.39537000, 151.94482000, 45.03610000,
+				152.87500000, 45.56250000 );
+		gp.curveTo( 153.80518000, 46.08890000, 154.80845000, 46.50063000,
+				155.90625000, 46.84375000 );
+		gp.curveTo( 157.00405000, 47.18687000, 158.17040000, 47.46699000,
+				159.43750000, 47.62500000 );
+		gp.curveTo( 160.70460000, 47.78301000, 162.06195000, 47.84143000,
+				163.50000000, 47.81250000 );
+		gp.lineTo( 177.93750000, 32.00000000 );
+		gp.curveTo( 179.02942000, 34.69379000, 179.71875000, 37.55534000,
+				179.71875000, 40.59375000 );
+		gp.curveTo( 179.71875000, 54.40087000, 167.40658000, 65.59375000,
+				152.21875000, 65.59375000 );
+		gp.curveTo( 149.53016000, 65.59375000, 146.92476000, 65.24766000,
+				144.46875000, 64.59375000 );
+		gp.lineTo( 72.65625000, 149.87500000 );
+		gp.curveTo( 74.16712200, 152.97100000, 75.00000000, 156.39480800,
+				75.00000000, 160.00000000 );
+		gp.curveTo( 75.00000000, 173.80711900, 62.68783100, 185.00000000,
+				47.50000000, 185.00000000 );
+		gp.lineTo( 47.50000000, 185.00000000 );
 		gp.closePath();
 		gp.transform( transform );
 		g.draw( gp );
+		g.setColor( Color.DARK_GRAY );
+		g.fill( gp );
 		g.translate( -tx, -ty );
 	}
 
@@ -723,14 +789,17 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 88.43956100, 183.84396000 );
 		gp.closePath();
 		gp.transform( transform );
+		g.setColor( Color.LIGHT_GRAY );
 		g.draw( gp );
+		g.fill( gp );
 		g.translate( -tx, -ty );
 	}
 
-	private void drawPawn( Graphics2D g, int tx, int ty )
+	private void drawPawn( Graphics2D g, int tx, int ty, Color color )
 	{
 		g.translate( tx, ty );
 		GeneralPath gp = new GeneralPath();
+		g.setColor( color );
 		gp.moveTo( 99.93750000, 199.93750000 );
 		gp.curveTo( 89.99999500, 199.87577637, 85.00000000, 190.00000000,
 				85.00000000, 130.00000000 );
@@ -751,7 +820,10 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 99.93750000, 199.93750000 );
 		gp.closePath();
 		gp.transform( transform );
+		g.setColor( Color.WHITE );
 		g.draw( gp );
+		g.setColor( color );
+		g.fill( gp );
 		g.translate( -tx, -ty );
 	}
 
