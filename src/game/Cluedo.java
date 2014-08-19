@@ -113,10 +113,7 @@ public class Cluedo implements ActionListener, GameListener
 
 		choices = new Cards[9];
 		rooms.toArray(choices);
-		Cards room = (Cards)JOptionPane.showInputDialog(null, "Which Room?",
-				"Please select the Room the murder could have taken place in.",
-				JOptionPane.INFORMATION_MESSAGE, null,
-				choices, choices[0] );
+		Cards room = ((Room)player.getLocation()).id;
 		for ( Player pl: players )
 		{
 			if ( pl.haveCard( suspect ) )
@@ -167,7 +164,7 @@ public class Cluedo implements ActionListener, GameListener
 		int dice1 = ( Cards.rand.nextInt( 6 ) + 1 );
 		int dice2 = ( Cards.rand.nextInt( 6 ) + 1 );
 		rolls.message( dice1, dice2 );
-		places = players.get(currentPlayer).canMove( dice1 + dice2 + 1, menu );
+		places = players.get(currentPlayer).canMove( dice1 + dice2, menu );
 		clickwait = true;
 	}
 
@@ -241,6 +238,7 @@ public class Cluedo implements ActionListener, GameListener
 		{
 			p = players.get(currentPlayer);
 			disableMenuItems(menu);
+			// menu comes back when clickOption returns a valid click 
 			move( p, menu );
 		}
 		else if ( e.getActionCommand() == MenuIndex.ACCUSE.name )
@@ -304,6 +302,7 @@ public class Cluedo implements ActionListener, GameListener
 				players.get(currentPlayer).moveMe( target );
 			} else while ( players.get(currentPlayer).moveMe( target ));
 			clickwait = false;
+			// this stops a user from using the menu while selecting a move with mouse 
 			if ( players.get(currentPlayer).isInARoom() )
 				menu.getItem( MenuIndex.SUGGEST.ordinal() ).setEnabled(true);
 			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);

@@ -33,6 +33,11 @@ public class Player implements MouseListener
 	private LinkedList<Cards> cards;
 	private PlayerListener moveUpdate;
 	private Place location;
+	public Place getLocation()
+	{
+		return location;
+	}
+
 	private Cards id;
 	// private List<Place> places = null;
 	private GameListener gameUpdate;
@@ -67,6 +72,7 @@ public class Player implements MouseListener
 		for ( Place p: places )
 			areas.add( p.getArea() );
 		moveUpdate.showPossibleMoves( areas );
+		location.unmark( moves );
 		return places;
 	}
 

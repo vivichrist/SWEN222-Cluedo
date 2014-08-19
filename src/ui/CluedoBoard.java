@@ -142,7 +142,7 @@ public class CluedoBoard extends JComponent implements PlayerListener
 			// connect squares
 			for ( Square s : sq.values() )
 			{
-				if ( isNeighbour( nSquare, s, tileW, tileH ) )
+				if ( isNeighbour( nSquare, s ) )
 				{
 					nSquare.connectTo( s );
 					s.connectTo( nSquare );
@@ -263,7 +263,7 @@ public class CluedoBoard extends JComponent implements PlayerListener
 	}
 
 	// can you get to this Square from that Square
-	private boolean isNeighbour( Square s1, Square s2, int tileW, int tileH )
+	private boolean isNeighbour( Square s1, Square s2 )
 	{
 		if ( (s1.location.x == s2.location.x
 				&& (s1.location.y == s2.location.y + 1 || s1.location.y == s2.location.y - 1))

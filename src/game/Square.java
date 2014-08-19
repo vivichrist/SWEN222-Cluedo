@@ -47,13 +47,10 @@ public class Square implements Place
 	{
 		if ( move == 0 ) return;
 		move = 0;
-		if ( moves > 0 )
-		{
 			for ( Place p: adjacent)
 			{
 				p.unmark( moves - 1 );
 			}
-		}
 	}
 	@Override
 	public Place movePlayer( Place target )
