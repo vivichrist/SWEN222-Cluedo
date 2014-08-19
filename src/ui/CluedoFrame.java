@@ -1,3 +1,9 @@
+/* This JFrame class is the beginnings of this program, hence it has code for
+ * loading the board array from the map.txt file. Creation of the menu which
+ * later attaches to each player class through MenuListener. Creation of the 
+ * CluedoPanel to display the dice rolls, players cards and players name (of
+ * the current player). 
+ */
 package ui;
 import game.Cluedo;
 
@@ -11,7 +17,6 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-
 
 @SuppressWarnings( "serial" )
 public class CluedoFrame extends JFrame

@@ -17,6 +17,11 @@ import javax.swing.JPopupMenu;
 import ui.PlayerListener;
 import ui.RollListener;
 
+/**
+ * @author Vivian Stewart
+ * The main game logic is found here and triggered by menu selections and mouse
+ * clicks received from the active player.  
+ */
 public class Cluedo implements ActionListener, GameListener
 {
 	private ArrayList<Player> players;
@@ -28,6 +33,13 @@ public class Cluedo implements ActionListener, GameListener
 	private List<Place> places = null;
 	private RollListener rolls;
 	private PlayerListener playerUpdates;
+	/**
+	 * @param rooms : data representation and list of all rooms in the game
+	 * @param squares : all corridor squares
+	 * @param playerUpdates : for updating the board display
+	 * @param rolls : for updating the display of dice and cards 
+	 * @param menu : listening to action commands from the frame menu
+	 */
 	public Cluedo( List<Room> rooms, List<Square> squares
 			, PlayerListener playerUpdates, RollListener rolls
 			, List<JMenuItem> menu)
@@ -84,12 +96,13 @@ public class Cluedo implements ActionListener, GameListener
 				lc.add( cards.remove(0) );
 			}
 		}
-		System.out.println( splits );
+		// System.out.println( splits );
 		players = playerUpdates.initPlayers( new LinkedList<Cards>( Arrays.asList( selectedValues ) )
 											, this, splits );
 		currentPlayer = 0;
-		players.get(currentPlayer).setActive(true);
-		rolls.cards( players.get(currentPlayer).playerCards(), players.get(currentPlayer).cardID() );
+		Player p = players.get(currentPlayer);
+		p.setActive(true);
+		rolls.cards( p.playerCards(), p.cardID() );
 	}
 
 	private void makeSuggestion( Player player )
@@ -136,27 +149,30 @@ public class Cluedo implements ActionListener, GameListener
 
 	public void takePassage( Player player )
 	{
-		if ( player.roomHasPassage() ) player.moveMe( null );
+		if ( player.roomHasPassage() ) player.moveMe( null ); // null means move through passage
 	}
 
 	private void newTurn()
 	{
-		currentPlayer = 0;
-		players.get(currentPlayer).setActive(true);
-		rolls.cards( players.get(currentPlayer).playerCards(), players.get(currentPlayer).cardID() );
+		currentPlayer = 0; // reset to fist player
+		Player p = players.get(currentPlayer);
+		p.setActive(true);
+		rolls.cards( p.playerCards(), p.cardID() );
 	}
 
 	private void endTurn()
 	{
-		players.get(currentPlayer).setActive(false);
+		Player p = players.get(currentPlayer);
+		p.setActive(false);
 		++currentPlayer;
+		p = players.get(currentPlayer);
 		if ( currentPlayer >= numPlayers )
 		{
 			newTurn();
 			return;
 		}
-		players.get(currentPlayer).setActive(true);
-		rolls.cards( players.get(currentPlayer).playerCards(), players.get(currentPlayer).cardID() );
+		p.setActive(true);
+		rolls.cards( p.playerCards(), p.cardID() );
 	}
 
 	private void move( Player player, JMenu menu )
@@ -164,7 +180,7 @@ public class Cluedo implements ActionListener, GameListener
 		int dice1 = ( Cards.rand.nextInt( 6 ) + 1 );
 		int dice2 = ( Cards.rand.nextInt( 6 ) + 1 );
 		rolls.message( dice1, dice2 );
-		places = players.get(currentPlayer).canMove( dice1 + dice2, menu );
+		places = player.canMove( dice1 + dice2, menu );
 		clickwait = true;
 	}
 
@@ -201,6 +217,11 @@ public class Cluedo implements ActionListener, GameListener
 		endTurn();
 	}
 
+	/**
+	 * @author Vivian Stewart
+	 * Order of menu items for user selection and just makes it a bit easier to
+	 * read the menu code.
+	 */
 	public static enum MenuIndex {
 		START("Start Cluedo"), DICE("Roll Dice and Move"),
 		PASSAGE("Take Secret Passage"), ACCUSE("Accusation"),
@@ -212,7 +233,7 @@ public class Cluedo implements ActionListener, GameListener
 			this.name = name;
 		}
 	}
-
+	// greys out all of the menu items
 	private void disableMenuItems( JMenu menu )
 	{
 		int limit = menu.getItemCount();
@@ -280,6 +301,11 @@ public class Cluedo implements ActionListener, GameListener
 			
 		}
 	}
+	/* One player is activated for use of clicking in the board to select a
+	 * highlighted area to move to and then animated to that point. This
+	 * method is called from the Player Class.
+	 * @see game.GameListener#clickedOption(int, int, javax.swing.JMenu)
+	 */
 	@Override
 	public void clickedOption( int x, int y, JMenu menu )
 	{
@@ -294,16 +320,18 @@ public class Cluedo implements ActionListener, GameListener
 				System.out.println("No such place: " +x+ ":" +y+ " PLace: " + target);
 				return;
 			}
+			Player p = players.get(currentPlayer);
 			if ( target instanceof Room )
 			{
 				Room r = (Room) target;
+				
 				Place nTarget = r.nearestNeighbour( target.getLocation() );
-				while ( players.get(currentPlayer).moveMe( nTarget ));
-				players.get(currentPlayer).moveMe( target );
-			} else while ( players.get(currentPlayer).moveMe( target ));
+				while ( p.moveMe( nTarget ));
+				p.moveMe( target );
+			} else while ( p.moveMe( target ));
 			clickwait = false;
 			// this stops a user from using the menu while selecting a move with mouse 
-			if ( players.get(currentPlayer).isInARoom() )
+			if ( p.isInARoom() )
 				menu.getItem( MenuIndex.SUGGEST.ordinal() ).setEnabled(true);
 			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
 		}

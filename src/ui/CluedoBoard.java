@@ -1,3 +1,12 @@
+/* The CluedoBoard Class manages a grid of characters that represent the tiles
+ * on a Cluedo game board. This Class is responsible for Displaying/Updating 
+ * it's graphics context in reaction to PLayer and Weapon movements and through
+ * PlayerListener interface. Mostly dealing with points, cards and characters
+ * as symbolic and location references. Also responsible for creating the 
+ * corresponding data representation of the game which only has callback
+ * interactions with this class.
+ */
+
 package ui;
 
 import game.Cluedo;

@@ -20,18 +20,33 @@ public interface Place
 	 *************************************************************************/
 	public void unmark( int moves );
 	/**************************************************************************
-	 * moves the player one place closer to the target and returns the new
-	 * place of the player. This will not necessarily indicate the end of
+	 * moves the player one place closer to the @param target and @return(s) the 
+	 * new place of the player. This will not necessarily indicate the end of
 	 * moving or end of turn. check if returned place equals target and if
 	 * the new place is
 	 *************************************************************************/
 	public Place movePlayer( Place target );
 
+	/**
+	 * @param mouseClick : place class checks the bounds of it's total area
+	 * @return true if user clicked on this Place on the board display
+	 */
 	public boolean contains( Point2D mouseClick );
 	
+	/**
+	 * @param taken : this Place will be sensed as occupied. Square cares about
+	 * this but Room does not.
+	 */
 	public void setOccupied( boolean taken );
 
+	/**
+	 * @return the current position relative to the array of tiles in the board.
+	 */
 	public Point getLocation();
 
+	/**
+	 * @return the area relative to position, taken up on the canvas by this
+	 * Place.
+	 */
 	public Shape getArea();
 }
