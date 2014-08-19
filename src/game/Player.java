@@ -1,97 +1,122 @@
 package game;
 import identities.Cards;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.Shape;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.LinkedList;
 import java.util.List;
+import ui.PlayerListener;
 
-import javax.swing.event.MouseInputListener;
 
-
-public class Player implements KeyListener, MouseInputListener
+public class Player implements MouseListener
 {
 	// when player makes a false accusation 'playing' becomes false
 	// and the player is then responsible for showing cards only
 	private boolean playing = true;
+	private boolean active = false;
 	// individually dealt cards that exclude the solution
 	private LinkedList<Cards> cards;
+	private PlayerListener moveUpdate;
 	private Place location;
+	private Cards id;
+	// private List<Place> places = null;
+	private GameListener gameUpdate;
 
-	public Player( Place p, List<Cards> cards )
+	public Player( Cards c, Place p, List<Cards> cards, PlayerListener moveUpdate, GameListener game )
 	{
+		id = c;
 		location = p;
 		this.cards = new LinkedList<Cards>(cards);
+		for ( Cards cd: cards )
+			cd.addVisibility(this);
+		this.moveUpdate = moveUpdate;
+		this.gameUpdate = game;
 	}
-	@Override
-	public void keyTyped( KeyEvent e )
+
+	public boolean isInARoom()
 	{
-		// TODO Auto-generated method stub
-
+		return location instanceof Room;
 	}
-
-	@Override
-	public void keyPressed( KeyEvent e )
+	public boolean roomHasPassage()
 	{
-		// TODO Auto-generated method stub
-
+		return isInARoom() && ((Room)location).hasPassage();
 	}
 
-	@Override
-	public void keyReleased( KeyEvent e )
+	public List<Place> canMove( int moves )
 	{
-		// TODO Auto-generated method stub
-
+		List<Place> places = location.mark( moves, true );
+		List<Shape> areas = new LinkedList<Shape>();
+		for ( Place p: places )
+			areas.add( p.getArea() );
+		moveUpdate.showPossibleMoves( areas );
+		return places;
 	}
 
+	public boolean moveMe( Place place )
+	{
+		if ( place == location ) return false;
+		// System.out.print( "curent loc:" + location.getLocation().x + "," + location.getLocation().y + "->" );
+		location = location.movePlayer( place );
+		// System.out.println( "next loc:" + location.getLocation().x + "," + location.getLocation().y );
+		moveUpdate.playerMoved( id, location );
+		try
+		{
+			Thread.sleep(500);
+		} catch ( InterruptedException e )
+		{
+			e.printStackTrace();
+		}
+		return true;
+	}
+	public List<Cards> playerCards()
+	{
+		return new LinkedList<Cards>( cards );
+	}
+
+	public boolean haveCard( Cards card )
+	{
+		return cards.contains(card);
+	}
+	public boolean addCard( Cards card )
+	{
+		card.addVisibility(this);
+		return cards.add(card);
+	}
+	public String id()
+	{
+		return id.name();
+	}
+
+	public Cards cardID()
+	{
+		return id;
+	}
 	@Override
 	public void mouseClicked( MouseEvent e )
 	{
-		// TODO Auto-generated method stub
-
+		if ( active && playing )
+		{
+			gameUpdate.clickedOption( e.getX(), e.getY() );
+		}
 	}
 
 	@Override
-	public void mousePressed( MouseEvent e )
-	{
-		// TODO Auto-generated method stub
-
-	}
-
+	public void mousePressed( MouseEvent e ){}
 	@Override
-	public void mouseReleased( MouseEvent e )
-	{
-		// TODO Auto-generated method stub
-
-	}
-
+	public void mouseReleased( MouseEvent e ){}
 	@Override
-	public void mouseEntered( MouseEvent e )
-	{
-		// TODO Auto-generated method stub
-
-	}
-
+	public void mouseEntered( MouseEvent e ){}
 	@Override
-	public void mouseExited( MouseEvent e )
-	{
-		// TODO Auto-generated method stub
+	public void mouseExited( MouseEvent e ){}
 
+	public boolean isActive()
+	{
+		return active;
 	}
 
-	@Override
-	public void mouseDragged( MouseEvent e )
+	public void setActive( boolean active )
 	{
-		// TODO Auto-generated method stub
-
+		this.active = active;
 	}
-
-	@Override
-	public void mouseMoved( MouseEvent e )
-	{
-		// TODO Auto-generated method stub
-
-	}
-
 }

@@ -1,6 +1,9 @@
 package ui;
 
+import game.Cluedo;
+import game.GameListener;
 import game.Place;
+import game.Player;
 import game.Room;
 import game.Square;
 import identities.Cards;
@@ -12,20 +15,22 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
 
 @SuppressWarnings( "serial" )
-public class CluedoBoard extends JComponent
+public class CluedoBoard extends JComponent implements PlayerListener
 {
 	private char[][]								tiles;
 	private int										wallthickness	= 5;
@@ -38,17 +43,19 @@ public class CluedoBoard extends JComponent
 	private List<Point>								centerArea		= new LinkedList<Point>();
 	private HashMap<Character, LinkedList<Point>>	roomTiles		= new HashMap<Character, LinkedList<Point>>();
 	private List<Point>								squares			= new LinkedList<Point>();
-	private HashMap<Character, Color>				colors			= new HashMap<Character, Color>();
+	private List<Shape>								highlights		= null;
+	private List<Square> 							starts			= new LinkedList<Square>(); // only needed for Cluedo class
+	private HashMap<Cards, Color>					colors			= new HashMap<Cards, Color>();
 	private AffineTransform							transform;
 
-	public CluedoBoard( char[][] board )
+	public CluedoBoard( char[][] board, RollListener rolls, List<JMenuItem> mi )
 	{
 		tiles = board;
 		this.height = board[ 0 ].length;
 		this.width = board.length;
 		System.out.println( "width:" + width + " height:" + height );
-		tileH = 25;
-		tileW = 25;
+		tileH = 30;
+		tileW = 30;
 		transform = AffineTransform.getScaleInstance( (tileW - 1) / 200.0f,
 				(tileH - 1) / 200.0f );
 		transform
@@ -79,7 +86,7 @@ public class CluedoBoard extends JComponent
 							addToRoom( ch, i, j - 1, doors );
 						if ( down == 'S' )
 							addToRoom( ch, i, j + 1, doors );
-						System.out.println( "Door At: " + i + ":" + j + " " );
+						// System.out.println( "Door At: " + i + ":" + j + " " );
 					} else if ( c == 'D' )
 					{
 						char left = i - 1 > 0 ? board[ i - 1 ][ j ]
@@ -90,12 +97,13 @@ public class CluedoBoard extends JComponent
 							addToRoom( ch, i - 1, j, doors );
 						if ( right == 'S' )
 							addToRoom( ch, i + 1, j, doors );
-						System.out.println( "Door At: " + i + ":" + j + " " );
+						// System.out.println( "Door At: " + i + ":" + j + " " );
 					}
 				} else if ( c == 'X' )
 				{
 					squares.add( new Point( i, j ) );
 					startSquares.add( new Point( i, j ) );
+					System.out.println( "StartSquare At: " + i + ":" + j + " " );
 				} else if ( c == 'S' )
 					squares.add( new Point( i, j ) );
 				else if ( c == '?' )
@@ -105,22 +113,32 @@ public class CluedoBoard extends JComponent
 							+ i + ", " + j + ")" );
 			}
 		}
-		createPlaces( doors );
+		colors.put( Cards.COLONELMUSTARD, Color.decode( "#FFDB58" ) );
+		colors.put( Cards.MISSSCARLETT, Color.decode( "#FF2400" ) );
+		colors.put( Cards.MRSPEACOCK, Color.decode( "#0c59c3" ) );
+		colors.put( Cards.PROFESSORPLUM, Color.decode( "#663393" ) );
+		colors.put( Cards.MRSWHITE, Color.WHITE );
+		colors.put( Cards.THEREVERENDGREEN, Color.GREEN );
+		HashMap<Point, Square> squares = createSquares();
+		List<Room> rooms = createRooms( doors, squares );
+		Cluedo cluedo = new Cluedo( rooms, new LinkedList<Square>( squares.values() )
+								  , this, rolls, mi );
 		setVisible( true );
 		repaint();
 		// create and connect places
 	}
 
-	private void createPlaces( HashMap<Character, LinkedList<Point>> doors )
+	private HashMap<Point, Square> createSquares()
 	{
-		HashMap<Point, Room> rooms = new HashMap<Point, Room>();
 		HashMap<Point, Square> sq = new HashMap<Point, Square>();
-		char[] chs = { 'K', 'B', 'A', 'C', 'L', 'H', 'U', 'N', 'I' };
 		// create squares
 		for ( Point p : squares )
 		{
-			Square nSquare = new Square( p );
-			sq.put( nSquare.getLocation(), nSquare );
+			Square nSquare = new Square( p, new Rectangle( p.x * tileW, p.y * tileH, tileW, tileH ) );
+			sq.put( p, nSquare );
+			// collect start squares
+			if ( startSquares.contains(p) )
+				starts.add(nSquare);
 			// connect squares
 			for ( Square s : sq.values() )
 			{
@@ -131,12 +149,21 @@ public class CluedoBoard extends JComponent
 				}
 			}
 		}
-		// create rooms
+		return sq;
+	}
+	private List<Room> createRooms(HashMap<Character, LinkedList<Point>> doors
+						, HashMap<Point, Square> sq )
+	{// create rooms
+		char[] chs = { 'K', 'B', 'A', 'C', 'L', 'H', 'U', 'N', 'I' };
+		HashMap<Point, Room> rooms = new HashMap<Point, Room>();
+
 		int leastx, mostx, leasty, mosty;
 		for ( char ch : chs )
 		{
 			// calculate the center of the room
 			LinkedList<Point> roomPoints = roomTiles.get( ch );
+			// also create the area for the room
+			Area roomArea = new Area();
 			leastx = Integer.MAX_VALUE;
 			mostx = 0;
 			leasty = Integer.MAX_VALUE;
@@ -147,12 +174,14 @@ public class CluedoBoard extends JComponent
 				leasty = p.y < leasty ? p.y : leasty;
 				mostx = p.x > mostx ? p.x : mostx;
 				mosty = p.y > mosty ? p.y : mosty;
+				roomArea.add( new Area( new Rectangle(
+						p.x * tileW, p.y * tileH, tileW, tileH ) ) );
 			}
 			// connect the room to squares (through doors mapping)
-			System.out.println( "mx:" + mostx + " lx:"+leastx+" my:"+mosty+" ly:" + leasty );
+			// System.out.println( "mx:" + mostx + " lx:"+leastx+" my:"+mosty+" ly:" + leasty );
 			Point p = new Point( ((mostx - leastx) / 2) + leastx, ((mosty - leasty) / 2) + leasty );
 			System.out.println( p );
-			Room r = new Room( p.x, p.y, Cards.roomID( ch ) );
+			Room r = new Room( p.x, p.y, Cards.roomID( ch ), roomArea );
 			for ( Point sp : doors.get( ch ) )
 			{
 				Place s = sq.get( sp );
@@ -174,23 +203,28 @@ public class CluedoBoard extends JComponent
 					}
 				} );
 			}
+		}
+		for ( Room room: rooms.values() )
+		{
 			// connect secret passages
-			if ( Cards.roomID( ch ) == Cards.KITCHEN )
-				for ( Room room : rooms.values() )
+			if ( room.id == Cards.KITCHEN )
+				for ( Room r : rooms.values() )
 				{
-					if ( Cards.roomID( ch ) == Cards.STUDY )
+					if ( r.id == Cards.STUDY )
 					{
 						r.connectTo( room );
 						room.connectTo( r );
+						break;
 					}
 				}
-			if ( Cards.roomID( ch ) == Cards.CONSERVATORY )
-				for ( Room room : rooms.values() )
+			if ( room.id == Cards.CONSERVATORY )
+				for ( Room r : rooms.values() )
 				{
-					if ( Cards.roomID( ch ) == Cards.LOUNGE )
+					if ( r.id == Cards.LOUNGE )
 					{
 						r.connectTo( room );
 						room.connectTo( r );
+						break;
 					}
 				}
 		}
@@ -203,25 +237,47 @@ public class CluedoBoard extends JComponent
 			weaponRooms.put( card, chs[ i ] );
 			++i;
 		}
+		return new LinkedList<Room>( rooms.values() );
+	}
+	// this will be part of the setup of putting players pawn on the board to be displayed
+	@Override
+	public ArrayList<Player> initPlayers( List<Cards> players, GameListener game
+								   , LinkedList<LinkedList<Cards>> splits )
+	{
+		ArrayList<Player> ps = new ArrayList<Player>();
+		if ( players.size() != splits.size() ) throw new IllegalArgumentException("Not enough cards for all players");
+		int i = 0;
+		for ( Cards c: players )
+		{
+			playerPos.put(c, startSquares.get(i));
+			Player pl = new Player( c, starts.get(i), splits.getFirst(), this, game );
+			addMouseListener( pl );
+			ps.add( pl );
+			splits.removeFirst();
+			++i;
+		}
+		repaint();
+		return ps;
 	}
 
+	// can you get to this Square from that Square
 	private boolean isNeighbour( Square s1, Square s2, int tileW, int tileH )
 	{
-		if ( (s1.location.x == s2.location.x 
+		if ( (s1.location.x == s2.location.x
 				&& (s1.location.y == s2.location.y + 1 || s1.location.y == s2.location.y - 1))
-			|| (s1.location.y == s2.location.y 
+			|| (s1.location.y == s2.location.y
 				&& (s1.location.x == s2.location.x + 1 || s1.location.x == s2.location.x - 1)) )
 			return true;
 		return false;
 	}
-
+	// add the points that represent tiles in the room
 	private void addToRoom( char c, int x, int y,
 			HashMap<Character, LinkedList<Point>> map )
 	{
 		LinkedList<Point> points = map.get( c );
 		if ( points == null )
 		{	map.put( c,
-					new LinkedList<Point>( Arrays.asList( new Point( x, y ) ) ) );
+				new LinkedList<Point>( Arrays.asList( new Point( x, y ) ) ) );
 		} else
 		{
 			points.add( new Point( x, y ) );
@@ -274,21 +330,6 @@ public class CluedoBoard extends JComponent
 		return 'W';
 	}
 
-	public void start()
-	{
-
-	}
-
-	public void startTurn()
-	{
-
-	}
-
-	public void endTurn()
-	{
-
-	}
-
 	@Override
 	protected void paintComponent( Graphics gr )
 	{
@@ -314,9 +355,12 @@ public class CluedoBoard extends JComponent
 				char ch = tiles[ i ][ j ];
 				char test = isInRoom( ch ) ? findRoomType( i, j ) : ch;
 				// draw room tiles
+				boolean highlight = highlights != null && highlights.contains( new Point( i, j ) );
 				if ( isRoom( test ) )
 				{
-					g.setColor( Color.BLUE );
+					if ( highlight )
+						g.setColor( Color.GREEN );
+					else g.setColor( Color.BLUE );
 					g.fillRect( 0, 0, tileW, tileH );
 					if ( ch == 'P' )
 					{
@@ -350,7 +394,8 @@ public class CluedoBoard extends JComponent
 					// draw square tiles
 				} else if ( ch == 'S' || ch == 'X' )
 				{
-					g.setColor( Color.YELLOW );
+					if ( highlight ) g.setColor( Color.GREEN );
+					else g.setColor( Color.YELLOW );
 					g.fillRect( 0, 0, tileW, tileH );
 					g.setColor( Color.BLACK );
 					drawSquare( (Graphics2D) g );
@@ -398,25 +443,20 @@ public class CluedoBoard extends JComponent
 		drawRope( (Graphics2D) g, p.x * tileW, p.y * tileH );
 		p = roomTiles.get( weaponRooms.get( Cards.SPANNER ) ).getFirst();
 		drawSpanner( (Graphics2D) g, p.x * tileW, p.y * tileH );
-		// draw players
-		if ( playerPos.size() == 6 )
+		// draw Areas that can be moved to if there are any
+		if ( highlights != null )
 		{
-			p = playerPos.get( Cards.COLONELMUSTARD );
-			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH,
-					Color.decode( "#FFDB58" ) );
-			p = playerPos.get( Cards.MISSSCARLETT );
-			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH,
-					Color.decode( "#FF2400" ) );
-			p = playerPos.get( Cards.MRSPEACOCK );
-			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH,
-					Color.decode( "#0c59c3" ) );
-			p = playerPos.get( Cards.PROFESSORPLUM );
-			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH,
-					Color.decode( "#663393" ) );
-			p = playerPos.get( Cards.MRSWHITE );
-			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH, Color.WHITE );
-			p = playerPos.get( Cards.THEREVERENDGREEN );
-			drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH, Color.GREEN );
+			g.setColor( Color.GREEN );
+			for ( Shape s: highlights )
+				g.draw( s );
+		}
+		// draw players
+		if ( playerPos.size() > 2  )
+		{
+			for ( Cards c: playerPos.keySet() ){
+				p = playerPos.get(c);
+				drawPawn( (Graphics2D) g, p.x * tileW, p.y * tileH, colors.get( c ) );
+			}
 		}
 	}
 
@@ -430,6 +470,39 @@ public class CluedoBoard extends JComponent
 	public Dimension getPreferredSize()
 	{
 		return new Dimension( width * tileW, height * tileH );
+	}
+
+	@Override
+	public void playerMoved( Cards player, Place location )
+	{
+		highlights = null;
+		LinkedList<Point> tiles = null;
+		// place the player at a random place in the
+		// room not occupied by anyone else.
+		if ( roomCenters.containsValue( location ) )
+			tiles = roomTiles.get(player);
+		else
+		{	// trusting that location is in a non-occupied square
+			playerPos.put( player, location.getLocation() );
+			paintImmediately( getVisibleRect() );
+			return;
+		}
+		int index = -1;
+		while ( index == -1 )
+		{
+			index = Cards.rand.nextInt() % tiles.size();
+			if ( playerPos.containsValue( tiles.get(index)) )
+				index = -1;
+		}
+		playerPos.put( player, tiles.get( index ) );
+		paintImmediately( getVisibleRect() );
+	}
+
+	@Override
+	public void showPossibleMoves( List<Shape> shapes )
+	{
+		highlights = shapes;
+		repaint();
 	}
 
 	private void drawSquare( Graphics2D g )
@@ -486,6 +559,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 97.84375000, 183.25000000 );
 		gp.closePath();
 		gp.transform( transform );
+		g.setColor(Color.BLACK);
 		g.draw( gp );
 		g.setColor( Color.YELLOW );
 		g.fill( gp );
@@ -524,6 +598,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 58.43911315, 115.34964673 );
 		gp.closePath();
 		gp.transform( transform );
+		g.setColor(Color.BLACK);
 		g.draw( gp );
 		g.setColor( Color.RED );
 		g.fill( gp );
@@ -691,6 +766,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 110.74433000, 83.18498000 );
 		gp.closePath();
 		gp.transform( transform );
+		g.setColor(Color.BLACK);
 		g.draw( gp );
 		g.setColor( Color.WHITE );
 		g.fill( gp );
@@ -767,6 +843,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 47.50000000, 185.00000000 );
 		gp.closePath();
 		gp.transform( transform );
+		g.setColor(Color.BLACK);
 		g.draw( gp );
 		g.setColor( Color.DARK_GRAY );
 		g.fill( gp );
@@ -799,7 +876,6 @@ public class CluedoBoard extends JComponent
 	{
 		g.translate( tx, ty );
 		GeneralPath gp = new GeneralPath();
-		g.setColor( color );
 		gp.moveTo( 99.93750000, 199.93750000 );
 		gp.curveTo( 89.99999500, 199.87577637, 85.00000000, 190.00000000,
 				85.00000000, 130.00000000 );
@@ -820,7 +896,7 @@ public class CluedoBoard extends JComponent
 		gp.lineTo( 99.93750000, 199.93750000 );
 		gp.closePath();
 		gp.transform( transform );
-		g.setColor( Color.WHITE );
+		g.setColor( Color.BLACK );
 		g.draw( gp );
 		g.setColor( color );
 		g.fill( gp );

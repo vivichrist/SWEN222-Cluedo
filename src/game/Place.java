@@ -1,5 +1,7 @@
 package game;
 import java.awt.Point;
+import java.awt.Shape;
+import java.awt.geom.Point2D;
 import java.util.List;
 
 public interface Place
@@ -12,7 +14,7 @@ public interface Place
 	 * "moves" should be decremented before forwarding to connecting places.
 	 * Marking stops after a room is reached or "moves" == 0
 	 *************************************************************************/
-	public List<Place> mark( int moves );
+	public List<Place> mark( int moves, boolean first );
 	/**************************************************************************
 	 * Remove the mark after player has selected a move
 	 *************************************************************************/
@@ -25,5 +27,9 @@ public interface Place
 	 *************************************************************************/
 	public Place movePlayer( Place target );
 
+	public boolean contains( Point2D mouseClick );
+
 	public Point getLocation();
+
+	public Shape getArea();
 }

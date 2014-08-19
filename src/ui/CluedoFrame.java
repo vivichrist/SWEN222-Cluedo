@@ -1,39 +1,94 @@
 package ui;
+import game.Cluedo;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsConfiguration;
 import java.awt.HeadlessException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
 
 @SuppressWarnings( "serial" )
 public class CluedoFrame extends JFrame
 {
-	
 	public CluedoFrame()
 	{
 		super( "Cluedo" );
+		char[][] board;
+		CluedoBoard cluedo = null;
 		setLayout( new BorderLayout() );// use border layout
+		// add a menu for game decision options
+		JMenuBar bar = new JMenuBar();
+		JMenu menu = new JMenu("Cluedo");
+		bar.add(menu);
+		List<JMenuItem> mi = new LinkedList<JMenuItem>();
+		JMenuItem start  = new JMenuItem( Cluedo.MenuIndex.START.name );
+		start.setActionCommand( Cluedo.MenuIndex.START.name);
+		mi.add(start);
+		JMenuItem move = new JMenuItem( Cluedo.MenuIndex.DICE.name );
+		move.setActionCommand( Cluedo.MenuIndex.DICE.name);
+		move.setEnabled(false);
+		mi.add(move);
+		JMenuItem passage = new JMenuItem(Cluedo.MenuIndex.PASSAGE.name);
+		passage.setEnabled(false);
+		passage.setActionCommand( Cluedo.MenuIndex.PASSAGE.name );
+		mi.add(passage);
+		JMenuItem accuse = new JMenuItem(Cluedo.MenuIndex.ACCUSE.name);
+		accuse.setEnabled(false);
+		accuse.setActionCommand( Cluedo.MenuIndex.ACCUSE.name );
+		mi.add(accuse);
+		JMenuItem suggest = new JMenuItem( Cluedo.MenuIndex.SUGGEST.name );
+		suggest.setEnabled(false);
+		suggest.setActionCommand( Cluedo.MenuIndex.SUGGEST.name );
+		mi.add(suggest);
+		JMenuItem endTurn  = new JMenuItem( Cluedo.MenuIndex.END.name );
+		endTurn.setEnabled(false);
+		endTurn.setActionCommand( Cluedo.MenuIndex.END.name );
+		mi.add(endTurn);
+		menu.add(start); // 0
+		menu.add(move);  // 1
+		menu.add(suggest);// 2
+		menu.add(accuse);// 3
+		menu.add(passage);// 4
+		menu.add(endTurn); // 5
+		add(bar, BorderLayout.NORTH);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// add a panel to display dice, cards held by player
+		// and players name.
+		CluedoPanel panel = new CluedoPanel();
+
+		add(panel, BorderLayout.SOUTH);
 		try
 		{
-			char[][] board = createBoardFromFile( "map.txt" );
-			CluedoBoard cluedo = new CluedoBoard( board );
+			board = createBoardFromFile( "map.txt" );
+			cluedo = new CluedoBoard( board, panel, mi );
 			add( cluedo, BorderLayout.CENTER );
 		} catch ( IOException e )
 		{
 			e.printStackTrace();
 		}
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		pack();
-		setResizable(false);
-		// prevent us from being resize-able
+		setResizable(false); // prevent us from being resize-able
 		setVisible( true );
 	}
 
@@ -44,7 +99,7 @@ public class CluedoFrame extends JFrame
 		LinkedList<LinkedList<Character>> map = new LinkedList<LinkedList<Character>>();
 		int width = -1;
 		int ch  = br.read();
-		if ( ch == -1 ) 
+		if ( ch == -1 )
 		{
 			br.close();fr.close();
 			throw new IllegalArgumentException("Input file \"" + filename + "\" is empty");
@@ -95,4 +150,6 @@ public class CluedoFrame extends JFrame
 	{
 		new CluedoFrame();
 	}
+
+
 }

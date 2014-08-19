@@ -1,37 +1,42 @@
 package game;
 
 import java.awt.Point;
-import java.util.Arrays;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Square implements Place
 {
 	public final Point location; // centre
-	public List<Place> adjacent;
+	private List<Place> adjacent;
 	private Player occupant = null;
-	private boolean move = false;
+	private int move = 0;
+	private Rectangle area;
 
 	public Point getLocation()
 	{
 		return location;
 	}
-	public Square( Point p )
+	public Square( Point p, Rectangle rect )
 	{
+		area = rect;
 		location = p;
 		adjacent = new LinkedList<Place>();
 	}
 	@Override
-	public List<Place> mark( int moves )
+	public List<Place> mark( int moves, boolean first )
 	{
 		LinkedList<Place> places = new LinkedList<Place>();
-		if (occupant != null || move) return places;
-		move = !move;
-		if ( moves > 0 )
+		if ( occupant != null || move >= moves ) return places;
+		if ( !first ) places.add(this);
+		move = moves;
+		if ( moves > 0 ) // this may already be true
 		{
 			for ( Place p: adjacent)
 			{
-				places.addAll( p.mark( moves - 1 ) );
+				places.addAll( p.mark( moves - 1, false ) );
 			}
 		}
 		return places;
@@ -39,6 +44,8 @@ public class Square implements Place
 	@Override
 	public void unmark( int moves )
 	{
+		if ( move == 0 ) return;
+		move = 0;
 		if ( moves > 0 )
 		{
 			for ( Place p: adjacent)
@@ -46,7 +53,6 @@ public class Square implements Place
 				p.unmark( moves - 1 );
 			}
 		}
-		move = false;
 	}
 	@Override
 	public Place movePlayer( Place target )
@@ -55,11 +61,7 @@ public class Square implements Place
 		double d, dist = Double.POSITIVE_INFINITY;
 		Place result = this;
 		for ( Place p: adjacent)
-		{ // find the adjacent (connected) place closest to the target.
-			// if the target and p are rooms then target is p
-			// i.e we don't move through rooms to get to a room
-			if ( p instanceof Room && target != p )
-				continue;
+		{
 			nextLoc = p.getLocation();
 			d = nextLoc.distance( loc );
 			if ( dist > d )
@@ -72,9 +74,28 @@ public class Square implements Place
 	}
 
 	@Override
+	public String toString()
+	{
+		return "Square [location=" + location + "]";
+	}
+	@Override
+	public boolean contains( Point2D mouseClick )
+	{
+		return area.contains( mouseClick );
+	}
+
+	@Override
 	public void connectTo( Place neighbour )
 	{
 		if ( !adjacent.contains(neighbour) )
+		{
 			adjacent.add( neighbour );
+			System.out.println( "Connect:" + this + "->" + neighbour + " " );
+		}
+	}
+	@Override
+	public Shape getArea()
+	{
+		return new Rectangle( area );
 	}
 }
