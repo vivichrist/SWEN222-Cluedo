@@ -28,6 +28,8 @@ public interface Place
 	public Place movePlayer( Place target );
 
 	public boolean contains( Point2D mouseClick );
+	
+	public void setOccupied( boolean taken );
 
 	public Point getLocation();
 

@@ -50,6 +50,7 @@ public class Cluedo implements ActionListener, GameListener
 				JOptionPane.INFORMATION_MESSAGE, null,
 				possibleValues, possibleValues[0]);
 		Cards[] selectedValues = new Cards[ numPlayers ];
+		@SuppressWarnings( "serial" )
 		List<Cards> pawns = new LinkedList<Cards>(){{
 			add(Cards.COLONELMUSTARD);
 			add(Cards.MISSSCARLETT);
@@ -97,19 +98,21 @@ public class Cluedo implements ActionListener, GameListener
 		List<Cards> weapons = Cards.getAll( Cards.Types.WEAPONS );
 		List<Cards> rooms = Cards.getAll( Cards.Types.ROOMS );
 
-		Cards[] choices = (Cards[])susp.toArray();
+		Cards[] choices = new Cards[6];
+		susp.toArray(choices);
 		Cards suspect = (Cards)JOptionPane.showInputDialog(null, "Which Suspect?",
 				"Please select the Suspect you wish to Suggest.",
 				JOptionPane.INFORMATION_MESSAGE, null,
 				choices, choices[0] );
 
-		choices = (Cards[])weapons.toArray();
+		weapons.toArray(choices);
 		Cards weapon = (Cards)JOptionPane.showInputDialog(null, "Which Weapon?",
 				"Please select the Weapon they mite have used to kill the victim.",
 				JOptionPane.INFORMATION_MESSAGE, null,
 				choices, choices[0] );
 
-		choices = (Cards[])rooms.toArray();
+		choices = new Cards[9];
+		rooms.toArray(choices);
 		Cards room = (Cards)JOptionPane.showInputDialog(null, "Which Room?",
 				"Please select the Room the murder could have taken place in.",
 				JOptionPane.INFORMATION_MESSAGE, null,
@@ -136,7 +139,7 @@ public class Cluedo implements ActionListener, GameListener
 
 	public void takePassage( Player player )
 	{
-		player.moveMe( null );
+		if ( player.roomHasPassage() ) player.moveMe( null );
 	}
 
 	private void newTurn()
@@ -159,12 +162,12 @@ public class Cluedo implements ActionListener, GameListener
 		rolls.cards( players.get(currentPlayer).playerCards(), players.get(currentPlayer).cardID() );
 	}
 
-	private void move( Player player )
+	private void move( Player player, JMenu menu )
 	{
 		int dice1 = ( Cards.rand.nextInt( 6 ) + 1 );
 		int dice2 = ( Cards.rand.nextInt( 6 ) + 1 );
 		rolls.message( dice1, dice2 );
-		places = players.get(currentPlayer).canMove( dice1 + dice2 + 1 );
+		places = players.get(currentPlayer).canMove( dice1 + dice2 + 1, menu );
 		clickwait = true;
 	}
 
@@ -192,7 +195,13 @@ public class Cluedo implements ActionListener, GameListener
 				JOptionPane.INFORMATION_MESSAGE, null,
 				choices, choices[0] );
 		if ( solution.contains(suspect) && solution.contains(weapon) && solution.contains(room) )
+		{
 			JOptionPane.showMessageDialog( null, "You WIN!!", "You WIN!!", JOptionPane.PLAIN_MESSAGE );
+			start();
+			return;
+		}
+		player.setPlaying( false );
+		endTurn();
 	}
 
 	public static enum MenuIndex {
@@ -232,50 +241,49 @@ public class Cluedo implements ActionListener, GameListener
 		{
 			p = players.get(currentPlayer);
 			disableMenuItems(menu);
-			if ( p.isInARoom() )
-				menu.getItem( MenuIndex.SUGGEST.ordinal() ).setEnabled(true);
-			move( p );
-			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
+			move( p, menu );
 		}
 		else if ( e.getActionCommand() == MenuIndex.ACCUSE.name )
 		{
 			p = players.get(currentPlayer);
-			makeAccusation( p );
 			disableMenuItems(menu);
-			if ( p.isInARoom() )
-				menu.getItem( MenuIndex.SUGGEST.ordinal() ).setEnabled(true);
-			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
+			makeAccusation( p );
+			menu.getItem( MenuIndex.DICE.ordinal() ).setEnabled(true);
+			if ( p.roomHasPassage() )
+				menu.getItem(MenuIndex.PASSAGE.ordinal()).setEnabled(true);
+			menu.getItem( MenuIndex.ACCUSE.ordinal() ).setEnabled(true);
 		}
 		else if ( e.getActionCommand() == MenuIndex.SUGGEST.name )
 		{
 			p = players.get(currentPlayer);
-			makeSuggestion( p );
 			disableMenuItems(menu);
 			menu.getItem( MenuIndex.ACCUSE.ordinal() ).setEnabled(true);
 			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
+			makeSuggestion( p );
 		}
 		else if ( e.getActionCommand() == MenuIndex.PASSAGE.name )
 		{
-			disableMenuItems(menu);
 			p = players.get(currentPlayer);
-			if ( p.isInARoom() )
-				menu.getItem( MenuIndex.SUGGEST.ordinal() ).setEnabled(true);
-			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
 			takePassage( p );
+			disableMenuItems(menu);
+			menu.getItem( MenuIndex.SUGGEST.ordinal() ).setEnabled(true);
+			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
+			
 		}
 		else if ( e.getActionCommand() == MenuIndex.END.name )
 		{
+			endTurn();
 			p = players.get(currentPlayer);
 			disableMenuItems( menu );
 			menu.getItem( MenuIndex.DICE.ordinal() ).setEnabled(true);
 			if ( p.roomHasPassage() )
 				menu.getItem(MenuIndex.PASSAGE.ordinal()).setEnabled(true);
 			menu.getItem( MenuIndex.ACCUSE.ordinal() ).setEnabled(true);
-			endTurn();
+			
 		}
 	}
 	@Override
-	public void clickedOption( int x, int y )
+	public void clickedOption( int x, int y, JMenu menu )
 	{
 		if (clickwait)
 		{
@@ -288,7 +296,6 @@ public class Cluedo implements ActionListener, GameListener
 				System.out.println("No such place: " +x+ ":" +y+ " PLace: " + target);
 				return;
 			}
-			clickwait = false;
 			if ( target instanceof Room )
 			{
 				Room r = (Room) target;
@@ -296,6 +303,10 @@ public class Cluedo implements ActionListener, GameListener
 				while ( players.get(currentPlayer).moveMe( nTarget ));
 				players.get(currentPlayer).moveMe( target );
 			} else while ( players.get(currentPlayer).moveMe( target ));
+			clickwait = false;
+			if ( players.get(currentPlayer).isInARoom() )
+				menu.getItem( MenuIndex.SUGGEST.ordinal() ).setEnabled(true);
+			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
 		}
 
 	}

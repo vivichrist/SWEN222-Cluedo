@@ -6,6 +6,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.swing.JMenu;
+
 import ui.PlayerListener;
 
 
@@ -14,6 +17,17 @@ public class Player implements MouseListener
 	// when player makes a false accusation 'playing' becomes false
 	// and the player is then responsible for showing cards only
 	private boolean playing = true;
+	private JMenu callback = null;
+	public boolean isPlaying()
+	{
+		return playing;
+	}
+
+	public void setPlaying( boolean playing )
+	{
+		this.playing = playing;
+	}
+
 	private boolean active = false;
 	// individually dealt cards that exclude the solution
 	private LinkedList<Cards> cards;
@@ -40,11 +54,14 @@ public class Player implements MouseListener
 	}
 	public boolean roomHasPassage()
 	{
-		return isInARoom() && ((Room)location).hasPassage();
+		if ( location instanceof Room )
+			return isInARoom() && ((Room)location).hasPassage();
+		return false;
 	}
 
-	public List<Place> canMove( int moves )
+	public List<Place> canMove( int moves, JMenu menu )
 	{
+		callback = menu;
 		List<Place> places = location.mark( moves, true );
 		List<Shape> areas = new LinkedList<Shape>();
 		for ( Place p: places )
@@ -56,9 +73,7 @@ public class Player implements MouseListener
 	public boolean moveMe( Place place )
 	{
 		if ( place == location ) return false;
-		// System.out.print( "curent loc:" + location.getLocation().x + "," + location.getLocation().y + "->" );
 		location = location.movePlayer( place );
-		// System.out.println( "next loc:" + location.getLocation().x + "," + location.getLocation().y );
 		moveUpdate.playerMoved( id, location );
 		try
 		{
@@ -97,7 +112,7 @@ public class Player implements MouseListener
 	{
 		if ( active && playing )
 		{
-			gameUpdate.clickedOption( e.getX(), e.getY() );
+			gameUpdate.clickedOption( e.getX(), e.getY(), callback );
 		}
 	}
 

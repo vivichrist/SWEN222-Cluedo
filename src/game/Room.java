@@ -32,14 +32,19 @@ public class Room implements Place
 	{
 		LinkedList<Place> places = new LinkedList<Place>();
 		if ( move >= moves ) return places;
-		if ( !first ) places.add(this);
 		else
 		{	move = moves;
-			if ( moves > 0 ) // this may already be true
-			{
-				for ( Place p: exits)
+			if ( moves > 0 )
+			{	if ( first ) // this may already be true
 				{
-					places.addAll( p.mark( moves - 1, false ) );
+					for ( Place p: exits)
+					{
+						places.addAll( p.mark( moves - 1, false ) );
+					}
+				}
+				else
+				{
+					places.add( this );
 				}
 			}
 		}
@@ -50,9 +55,9 @@ public class Room implements Place
 	public void unmark( int moves )
 	{
 		if ( move == 0 ) return;
-		move = 0;
 		if ( moves > 0 )
 		{
+			move = 0;
 			for ( Place p: exits)
 			{
 				p.unmark( moves - 1 );
@@ -80,6 +85,7 @@ public class Room implements Place
 				result = e;
 			}
 		}
+		result.setOccupied( true );
 		return result;
 	}
 
@@ -142,5 +148,8 @@ public class Room implements Place
 	{
 		return new Area( area );
 	}
+
+	@Override
+	public void setOccupied( boolean taken ){}
 
 }

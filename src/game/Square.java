@@ -11,7 +11,7 @@ public class Square implements Place
 {
 	public final Point location; // centre
 	private List<Place> adjacent;
-	private Player occupant = null;
+	private boolean occupant = false;
 	private int move = 0;
 	private Rectangle area;
 
@@ -29,8 +29,9 @@ public class Square implements Place
 	public List<Place> mark( int moves, boolean first )
 	{
 		LinkedList<Place> places = new LinkedList<Place>();
-		if ( occupant != null || move >= moves ) return places;
-		if ( !first ) places.add(this);
+		if ( !first && (occupant || move >= moves) ) return places;
+		places.add( this );
+		if ( moves == 0 ) return places;
 		move = moves;
 		if ( moves > 0 ) // this may already be true
 		{
@@ -70,6 +71,8 @@ public class Square implements Place
 				result = p;
 			}
 		}
+		this.occupant = false;
+		result.setOccupied( true );
 		return result;
 	}
 
@@ -97,5 +100,11 @@ public class Square implements Place
 	public Shape getArea()
 	{
 		return new Rectangle( area );
+	}
+
+	@Override
+	public void setOccupied( boolean taken )
+	{
+		occupant = taken;
 	}
 }

@@ -54,8 +54,8 @@ public class CluedoBoard extends JComponent implements PlayerListener
 		this.height = board[ 0 ].length;
 		this.width = board.length;
 		System.out.println( "width:" + width + " height:" + height );
-		tileH = 30;
-		tileW = 30;
+		tileH = 25;
+		tileW = 25;
 		transform = AffineTransform.getScaleInstance( (tileW - 1) / 200.0f,
 				(tileH - 1) / 200.0f );
 		transform
@@ -121,8 +121,8 @@ public class CluedoBoard extends JComponent implements PlayerListener
 		colors.put( Cards.THEREVERENDGREEN, Color.GREEN );
 		HashMap<Point, Square> squares = createSquares();
 		List<Room> rooms = createRooms( doors, squares );
-		Cluedo cluedo = new Cluedo( rooms, new LinkedList<Square>( squares.values() )
-								  , this, rolls, mi );
+		new Cluedo( rooms, new LinkedList<Square>( squares.values() )
+				  , this, rolls, mi );
 		setVisible( true );
 		repaint();
 		// create and connect places
@@ -250,7 +250,9 @@ public class CluedoBoard extends JComponent implements PlayerListener
 		for ( Cards c: players )
 		{
 			playerPos.put(c, startSquares.get(i));
-			Player pl = new Player( c, starts.get(i), splits.getFirst(), this, game );
+			Square s = starts.get(i);
+			s.setOccupied( true );
+			Player pl = new Player( c, s, splits.getFirst(), this, game );
 			addMouseListener( pl );
 			ps.add( pl );
 			splits.removeFirst();

@@ -27,15 +27,15 @@ public enum Cards
 	, REVOLVER( "Revolver", Types.WEAPONS )
 	, ROPE( "Rope", Types.WEAPONS )
 	, SPANNER( "Spanner", Types.WEAPONS )
-	, KITCHEN( "Kitchen", Types.WEAPONS ) // Rooms
-	, BALLROOM( "Ball Room", Types.WEAPONS )
-	, CONSERVATORY( "Conservatory", Types.WEAPONS )
-	, DININGROOM( "Dining Room", Types.WEAPONS )
-	, BILLIARDROOM( "Billiard Room", Types.WEAPONS )
-	, LIBRARY( "Library", Types.WEAPONS )
-	, LOUNGE( "Lounge", Types.WEAPONS )
-	, HALL( "Hall", Types.WEAPONS )
-	, STUDY( "Study", Types.WEAPONS )
+	, KITCHEN( "Kitchen", Types.ROOMS ) // Rooms
+	, BALLROOM( "Ball Room", Types.ROOMS )
+	, CONSERVATORY( "Conservatory", Types.ROOMS )
+	, DININGROOM( "Dining Room", Types.ROOMS )
+	, BILLIARDROOM( "Billiard Room", Types.ROOMS )
+	, LIBRARY( "Library", Types.ROOMS )
+	, LOUNGE( "Lounge", Types.ROOMS )
+	, HALL( "Hall", Types.ROOMS )
+	, STUDY( "Study", Types.ROOMS )
 	, HIDDEN( "Unknown", Types.NONE );
 	public static enum Types
 	{
@@ -46,29 +46,29 @@ public enum Cards
 	private Types type;
 	private List<Player> visibility = new LinkedList<Player>();
 
-	private Image ballroom = loadImage("ballroom.png");
-	private Image billiardroom = loadImage("billiard room.png");
-	private Image candlestick = loadImage("candlestick.png");
-	private Image colonelMustard = loadImage("colonel mustard.png");
-	private Image conservatory = loadImage("conservatory");
-	private Image diningroom = loadImage("dinning room.png");
-	private Image dagger = loadImage("dragger.png");
-	private Image hall = loadImage("hall.png");
-	private Image kitchen = loadImage("kitchen.png");
-	private Image leadPipe = loadImage("lead pipe.png");
-	private Image library = loadImage("library.png");
-	private Image lounge = loadImage("lounge.png");
-	private Image missScarlett = loadImage("miss scarlett.png");
-	private Image mrsPeacock = loadImage("mrs peacocl.png");
-	private Image mrsWhite = loadImage("mrs white.png");
-	private Image professorPlum = loadImage("professor plum.png");
-	private Image revGreen = loadImage("rev green.png");
-	private Image rope = loadImage("rope.png");
-	private Image rovolver = loadImage("revolver.png");
-	private Image spanner = loadImage("spanner.png");
-	private Image study = loadImage("study.png");
+	public static final Image ballroom = loadImage("ballroom.png");
+	public static final Image billiardroom = loadImage("billiard room.png");
+	public static final Image candlestick = loadImage("candlestick.png");
+	public static final Image colonelMustard = loadImage("colonelmustard.png");
+	public static final Image conservatory = loadImage("conservatory");
+	public static final Image diningroom = loadImage("dinning room.png");
+	public static final Image dagger = loadImage("dragger.png");
+	public static final Image hall = loadImage("hall.png");
+	public static final Image kitchen = loadImage("kitchen.png");
+	public static final Image leadPipe = loadImage("leadpipe.png");
+	public static final Image library = loadImage("library.png");
+	public static final Image lounge = loadImage("lounge.png");
+	public static final Image missScarlett = loadImage("missscarlett.png");
+	public static final Image mrsPeacock = loadImage("mrspeacock.png");
+	public static final Image mrsWhite = loadImage("mrswhite.png");
+	public static final Image professorPlum = loadImage("professorplum.png");
+	public static final Image revGreen = loadImage("revgreen.png");
+	public static final Image rope = loadImage("rope.png");
+	public static final Image rovolver = loadImage("revolver.png");
+	public static final Image spanner = loadImage("spanner.png");
+	public static final Image study = loadImage("study.png");
 
-	private Image loadImage( String str )
+	private static Image loadImage( String str )
 	{
 		BufferedImage img = null;
 		try {
@@ -124,16 +124,20 @@ public enum Cards
 	public static List<Cards> generateSolution( List<Cards> cards )
 	{
 		LinkedList<Cards> solution = new LinkedList<Cards>();
-
-		while ( solution.size() != 3 )
+		boolean same;
+		while ( solution.size() < 3 )
 		{
 			Cards c = cards.get( rand.nextInt( 21 - solution.size() ) );
 			Types t = c.type;
 			if ( t == Types.NONE ) continue;
+			same = false;
 			for ( Cards s: solution )
-				if ( s.type == t ) continue;
-			solution.add( c );
-			cards.remove( c );
+				if ( s.type == t ) same = true;
+			if ( !same )
+			{
+				solution.add( c );
+				cards.remove( c );
+			}
 		}
 		return solution;
 	}
@@ -168,70 +172,37 @@ public enum Cards
 		return Types.NONE;
 	}
 
-	public Image imageName ( Cards c){
-		if( c.equals(BALLROOM)){
-			return ballroom;
+	public Image imageName ( Cards c)
+	{
+		switch ( c )
+		{
+		case BALLROOM :	return ballroom;
+		case BILLIARDROOM : return billiardroom;
+		case CANDLESTICK : return candlestick;
+		case COLONELMUSTARD : return colonelMustard;
+		case CONSERVATORY : return conservatory;
+		case DAGGER : return dagger;
+		case DININGROOM : return diningroom;
+		case HALL : return hall;
+		case KITCHEN : return kitchen;
+		case LEADPIPE : return leadPipe;
+		case LIBRARY : return library;
+		case LOUNGE : return lounge;
+		case MISSSCARLETT : return missScarlett;
+		case MRSPEACOCK : return mrsPeacock;
+		case MRSWHITE : return mrsWhite;
+		case PROFESSORPLUM : return professorPlum;
+		case REVOLVER : return rovolver;
+		case ROPE : return rope;
+		case SPANNER : return spanner;
+		case STUDY : return study;
+		case THEREVERENDGREEN : return revGreen;
+		case HIDDEN :
+			break;
+		default :
+			break;
 		}
-		else if ( c.equals(BILLIARDROOM)){
-			return billiardroom;
-		}
-		else if ( c.equals(CANDLESTICK)){
-			return candlestick;
-		}
-		else if ( c.equals(COLONELMUSTARD)){
-			return colonelMustard;
-		}
-		else if (c.equals(CONSERVATORY)){
-			return conservatory;
-		}
-		else if (c.equals(DAGGER)){
-			return dagger;
-		}
-		else if ( c.equals(DININGROOM)){
-			return diningroom;
-		}
-		else if (c.equals(HALL)){
-			return hall;
-		}
-		else if (c.equals(KITCHEN)){
-			return kitchen;
-		}
-		else if (c.equals(LEADPIPE)){
-			return leadPipe;
-		}
-		else if (c.equals(LIBRARY)){
-			return library;
-		}
-		else if (c.equals(LOUNGE)){
-			return lounge;
-		}
-		else if (c.equals(MISSSCARLETT)){
-			return missScarlett;
-		}
-		else if (c.equals(MRSPEACOCK)){
-			return mrsPeacock;
-		}
-		else if (c.equals(MRSWHITE)){
-			return mrsWhite;
-		}
-		else if (c.equals(PROFESSORPLUM)){
-			return professorPlum;
-		}
-		else if (c.equals(REVOLVER)){
-			return rovolver;
-		}
-		else if (c.equals(ROPE)){
-			return rope;
-		}
-		else if (c.equals(SPANNER)){
-			return spanner;
-		}
-		else if (c.equals(STUDY)){
-			return study;
-		}
-		else{
-			return revGreen;
-		}
+		return null;
 	}
 }
 

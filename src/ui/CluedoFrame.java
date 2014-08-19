@@ -2,30 +2,15 @@ package ui;
 import game.Cluedo;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GraphicsConfiguration;
-import java.awt.HeadlessException;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
-
-import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 
 
 @SuppressWarnings( "serial" )
@@ -65,11 +50,11 @@ public class CluedoFrame extends JFrame
 		endTurn.setEnabled(false);
 		endTurn.setActionCommand( Cluedo.MenuIndex.END.name );
 		mi.add(endTurn);
-		menu.add(start); // 0
-		menu.add(move);  // 1
-		menu.add(suggest);// 2
-		menu.add(accuse);// 3
-		menu.add(passage);// 4
+		menu.add(start);   // 0
+		menu.add(move);    // 1
+		menu.add(passage); // 2
+		menu.add(accuse);  // 3
+		menu.add(suggest); // 4
 		menu.add(endTurn); // 5
 		add(bar, BorderLayout.NORTH);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
