@@ -32,35 +32,12 @@ public class CluedoFrame extends JFrame
 		JMenu menu = new JMenu("Cluedo");
 		bar.add(menu);
 		List<JMenuItem> mi = new LinkedList<JMenuItem>();
-		JMenuItem start  = new JMenuItem( Cluedo.MenuIndex.START.name );
-		start.setActionCommand( Cluedo.MenuIndex.START.name);
-		mi.add(start);
-		JMenuItem move = new JMenuItem( Cluedo.MenuIndex.DICE.name );
-		move.setActionCommand( Cluedo.MenuIndex.DICE.name);
-		move.setEnabled(false);
-		mi.add(move);
-		JMenuItem passage = new JMenuItem(Cluedo.MenuIndex.PASSAGE.name);
-		passage.setEnabled(false);
-		passage.setActionCommand( Cluedo.MenuIndex.PASSAGE.name );
-		mi.add(passage);
-		JMenuItem accuse = new JMenuItem(Cluedo.MenuIndex.ACCUSE.name);
-		accuse.setEnabled(false);
-		accuse.setActionCommand( Cluedo.MenuIndex.ACCUSE.name );
-		mi.add(accuse);
-		JMenuItem suggest = new JMenuItem( Cluedo.MenuIndex.SUGGEST.name );
-		suggest.setEnabled(false);
-		suggest.setActionCommand( Cluedo.MenuIndex.SUGGEST.name );
-		mi.add(suggest);
-		JMenuItem endTurn  = new JMenuItem( Cluedo.MenuIndex.END.name );
-		endTurn.setEnabled(false);
-		endTurn.setActionCommand( Cluedo.MenuIndex.END.name );
-		mi.add(endTurn);
-		menu.add(start);   // 0
-		menu.add(move);    // 1
-		menu.add(passage); // 2
-		menu.add(accuse);  // 3
-		menu.add(suggest); // 4
-		menu.add(endTurn); // 5
+		addMenuItem( mi, menu, Cluedo.MenuIndex.START.name, true );
+		addMenuItem( mi, menu, Cluedo.MenuIndex.DICE.name, false );
+		addMenuItem( mi, menu, Cluedo.MenuIndex.PASSAGE.name, false );
+		addMenuItem( mi, menu, Cluedo.MenuIndex.ACCUSE.name, false );
+		addMenuItem( mi, menu,  Cluedo.MenuIndex.SUGGEST.name, false );
+		addMenuItem( mi, menu,  Cluedo.MenuIndex.END.name, false );
 		add(bar, BorderLayout.NORTH);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// add a panel to display dice, cards held by player
@@ -80,6 +57,16 @@ public class CluedoFrame extends JFrame
 		pack();
 		setResizable(false); // prevent us from being resize-able
 		setVisible( true );
+	}
+
+	private JMenuItem addMenuItem( List<JMenuItem> mi, JMenu menu, String str, boolean enable )
+	{
+		JMenuItem item  = new JMenuItem( str );
+		item.setActionCommand( str );
+		item.setEnabled( enable );
+		menu.add(item);
+		mi.add( item );
+		return item;
 	}
 
 	private static char[][] createBoardFromFile( String filename ) throws IOException

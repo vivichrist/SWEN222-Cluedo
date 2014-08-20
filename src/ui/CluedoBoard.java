@@ -143,7 +143,8 @@ public class CluedoBoard extends JComponent implements PlayerListener
 		// create squares
 		for ( Point p : squares )
 		{
-			Square nSquare = new Square( p, new Rectangle( p.x * tileW, p.y * tileH, tileW, tileH ) );
+			Square nSquare = new Square( p
+					, new Rectangle( p.x * tileW, p.y * tileH, tileW, tileH ) );
 			sq.put( p, nSquare );
 			// collect start squares
 			if ( startSquares.contains(p) )
@@ -162,7 +163,7 @@ public class CluedoBoard extends JComponent implements PlayerListener
 	}
 	private List<Room> createRooms(HashMap<Character, LinkedList<Point>> doors
 						, HashMap<Point, Square> sq )
-	{// create rooms
+	{
 		char[] chs = { 'K', 'B', 'A', 'C', 'L', 'H', 'U', 'N', 'I' };
 		HashMap<Point, Room> rooms = new HashMap<Point, Room>();
 
@@ -171,7 +172,6 @@ public class CluedoBoard extends JComponent implements PlayerListener
 		{
 			// calculate the center of the room
 			LinkedList<Point> roomPoints = roomTiles.get( ch );
-			// also create the area for the room
 			Area roomArea = new Area();
 			leastx = Integer.MAX_VALUE;
 			mostx = 0;
@@ -183,26 +183,26 @@ public class CluedoBoard extends JComponent implements PlayerListener
 				leasty = p.y < leasty ? p.y : leasty;
 				mostx = p.x > mostx ? p.x : mostx;
 				mosty = p.y > mosty ? p.y : mosty;
+				// also create the area for the room
 				roomArea.add( new Area( new Rectangle(
 						p.x * tileW, p.y * tileH, tileW, tileH ) ) );
 			}
 			// connect the room to squares (through doors mapping)
-			// System.out.println( "mx:" + mostx + " lx:"+leastx+" my:"+mosty+" ly:" + leasty );
-			Point p = new Point( ((mostx - leastx) / 2) + leastx, ((mosty - leasty) / 2) + leasty );
-			System.out.println( p );
-			Room r = new Room( p.x, p.y, Cards.roomID( ch ), roomArea );
+			Point center = new Point( ((mostx - leastx) / 2) + leastx, ((mosty - leasty) / 2) + leasty );
+			Room room = new Room( center.x, center.y, Cards.roomID( ch ), roomArea );
+			roomCenters.put( ch, center );
 			for ( Point sp : doors.get( ch ) )
 			{
-				Place s = sq.get( sp );
-				r.connectTo( s );
-				s.connectTo( r );
+				Place square = sq.get( sp );
+				room.connectTo( square );
+				square.connectTo( room );
 			}
-			rooms.put( p, r );
-			// sort room tiles so we can pick the nearest to the middle
-			roomCenters.put( ch, p );
+			rooms.put( center, room );
+			// TODO: sort room tiles so we can pick the nearest to the middle
+			
 			for ( LinkedList<Point> lp : roomTiles.values() )
-			{
-				final Point pt = new Point( p );
+			{	// TODO: this doesn't sort correctly
+				final Point pt = new Point( center );
 				Collections.sort( lp, new Comparator<Point>()
 				{
 					@Override
@@ -253,22 +253,28 @@ public class CluedoBoard extends JComponent implements PlayerListener
 	public ArrayList<Player> initPlayers( List<Cards> players, GameListener game
 								   , LinkedList<LinkedList<Cards>> splits )
 	{
-		ArrayList<Player> ps = new ArrayList<Player>();
-		if ( players.size() != splits.size() ) throw new IllegalArgumentException("Not enough cards for all players");
-		int i = 0;
-		for ( Cards c: players )
-		{
-			playerPos.put(c, startSquares.get(i));
-			Square s = starts.get(i);
-			s.setOccupied( true );
-			Player pl = new Player( c, s, splits.getFirst(), this, game );
+		ArrayList<Player> createdPlayers = new ArrayList<Player>();
+		if ( players.size() != splits.size() )
+			throw new IllegalArgumentException("Not enough cards for all players");
+		int i;
+		for ( Cards pcard: players )
+		{	
+			Point startp;
+			do
+			{
+				i = Cards.rand.nextInt( 5 ); // there are 6 start squares
+				startp = startSquares.get( i );
+			} while( playerPos.containsValue( startp ) );
+			Square square = starts.get( i );
+			playerPos.put( pcard, startSquares.get( i ) );
+			square.setOccupied( true );
+			Player pl = new Player( pcard, square, splits.getFirst(), this, game );
 			addMouseListener( pl );
-			ps.add( pl );
+			createdPlayers.add( pl );
 			splits.removeFirst();
-			++i;
 		}
 		repaint();
-		return ps;
+		return createdPlayers;
 	}
 
 	// can you get to this Square from that Square
@@ -486,7 +492,7 @@ public class CluedoBoard extends JComponent implements PlayerListener
 	@Override
 	public void playerMoved( Cards player, Place location )
 	{
-		highlights = null;
+		highlights = null; // turn off highlighting
 		LinkedList<Point> tiles = null;
 		// place the player at a random place in the
 		// room not occupied by anyone else.
@@ -498,7 +504,7 @@ public class CluedoBoard extends JComponent implements PlayerListener
 			paintImmediately( getVisibleRect() );
 			return;
 		}
-		int index = -1;
+		int index = 0;
 		while ( index == -1 )
 		{
 			index = Cards.rand.nextInt() % tiles.size();

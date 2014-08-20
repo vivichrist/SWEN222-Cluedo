@@ -165,12 +165,12 @@ public class Cluedo implements ActionListener, GameListener
 		Player p = players.get(currentPlayer);
 		p.setActive(false);
 		++currentPlayer;
-		p = players.get(currentPlayer);
-		if ( currentPlayer >= numPlayers )
+		if ( currentPlayer == numPlayers )
 		{
 			newTurn();
 			return;
 		}
+		p = players.get(currentPlayer);
 		p.setActive(true);
 		rolls.cards( p.playerCards(), p.cardID() );
 	}
@@ -185,24 +185,24 @@ public class Cluedo implements ActionListener, GameListener
 	}
 
 	private void makeAccusation( Player player )
-	{
+	{	// TODO: test this method
 		List<Cards> susp = Cards.getAll( Cards.Types.CHARACTERS );
 		List<Cards> weapons = Cards.getAll( Cards.Types.WEAPONS );
 		List<Cards> rooms = Cards.getAll( Cards.Types.ROOMS );
-
-		Cards[] choices = (Cards[])susp.toArray();
+		Cards[] choices = new Cards[6];
+		susp.toArray(choices);
 		Cards suspect = (Cards)JOptionPane.showInputDialog(null, "Which Suspect?",
 				"Please select the Suspect you wish to Accuse.",
 				JOptionPane.INFORMATION_MESSAGE, null,
 				choices, choices[0] );
 
-		choices = (Cards[])weapons.toArray();
+		weapons.toArray(choices);
 		Cards weapon = (Cards)JOptionPane.showInputDialog(null, "Which Weapon?",
 				"Please select the Weapon they used to kill the victim.",
 				JOptionPane.INFORMATION_MESSAGE, null,
 				choices, choices[0] );
-
-		choices = (Cards[])rooms.toArray();
+		choices = new Cards[9];
+		rooms.toArray(choices);
 		Cards room = (Cards)JOptionPane.showInputDialog(null, "Which Room?",
 				"Please select the Room the murder took place in.",
 				JOptionPane.INFORMATION_MESSAGE, null,
@@ -335,6 +335,5 @@ public class Cluedo implements ActionListener, GameListener
 				menu.getItem( MenuIndex.SUGGEST.ordinal() ).setEnabled(true);
 			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
 		}
-
 	}
 }
