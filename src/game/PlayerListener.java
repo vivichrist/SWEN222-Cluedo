@@ -8,7 +8,7 @@ import javax.swing.JMenu;
  * Allowing Player to be responsible for its own movement and a way of
  * manipulating the menu later. This could be better though...
  */
-public interface GameListener
+public interface PlayerListener
 {
 	/**
 	 * @param x : mouse click coordinate relative to the board canvas  

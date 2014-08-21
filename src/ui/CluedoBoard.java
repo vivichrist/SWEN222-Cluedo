@@ -1,7 +1,7 @@
 /* The CluedoBoard Class manages a grid of characters that represent the tiles
  * on a Cluedo game board. This Class is responsible for Displaying/Updating 
  * it's graphics context in reaction to PLayer and Weapon movements and through
- * PlayerListener interface. Mostly dealing with points, cards and characters
+ * GameListener interface. Mostly dealing with points, cards and characters
  * as symbolic and location references. Also responsible for creating the 
  * corresponding data representation of the game which only has callback
  * interactions with this class.
@@ -10,7 +10,7 @@
 package ui;
 
 import game.Cluedo;
-import game.GameListener;
+import game.PlayerListener;
 import game.Place;
 import game.Player;
 import game.Room;
@@ -39,7 +39,7 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 @SuppressWarnings( "serial" )
-public class CluedoBoard extends JComponent implements PlayerListener
+public class CluedoBoard extends JComponent implements GameListener
 {
 	private char[][]								tiles;
 	private int										wallthickness	= 5;
@@ -250,7 +250,7 @@ public class CluedoBoard extends JComponent implements PlayerListener
 	}
 	// this will be part of the setup of putting players pawn on the board to be displayed
 	@Override
-	public ArrayList<Player> initPlayers( List<Cards> players, GameListener game
+	public ArrayList<Player> initPlayers( List<Cards> players, PlayerListener game
 								   , LinkedList<LinkedList<Cards>> splits )
 	{
 		ArrayList<Player> createdPlayers = new ArrayList<Player>();
@@ -507,7 +507,7 @@ public class CluedoBoard extends JComponent implements PlayerListener
 		int index = 0;
 		while ( index == -1 )
 		{
-			index = Cards.rand.nextInt() % tiles.size();
+			index = Cards.rand.nextInt( tiles.size() );
 			if ( playerPos.containsValue( tiles.get(index)) )
 				index = -1;
 		}

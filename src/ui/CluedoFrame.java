@@ -32,6 +32,7 @@ public class CluedoFrame extends JFrame
 		JMenu menu = new JMenu("Cluedo");
 		bar.add(menu);
 		List<JMenuItem> mi = new LinkedList<JMenuItem>();
+		// order that these are added is important!
 		addMenuItem( mi, menu, Cluedo.MenuIndex.START.name, true );
 		addMenuItem( mi, menu, Cluedo.MenuIndex.DICE.name, false );
 		addMenuItem( mi, menu, Cluedo.MenuIndex.PASSAGE.name, false );

@@ -14,7 +14,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import ui.PlayerListener;
+import ui.GameListener;
 import ui.RollListener;
 
 /**
@@ -22,7 +22,7 @@ import ui.RollListener;
  * The main game logic is found here and triggered by menu selections and mouse
  * clicks received from the active player.  
  */
-public class Cluedo implements ActionListener, GameListener
+public class Cluedo implements ActionListener, PlayerListener
 {
 	private ArrayList<Player> players;
 	private int currentPlayer = 0;
@@ -32,7 +32,7 @@ public class Cluedo implements ActionListener, GameListener
 	private List<Cards> solution;
 	private List<Place> places = null;
 	private RollListener rolls;
-	private PlayerListener playerUpdates;
+	private GameListener playerUpdates;
 	/**
 	 * @param rooms : data representation and list of all rooms in the game
 	 * @param squares : all corridor squares
@@ -41,7 +41,7 @@ public class Cluedo implements ActionListener, GameListener
 	 * @param menu : listening to action commands from the frame menu
 	 */
 	public Cluedo( List<Room> rooms, List<Square> squares
-			, PlayerListener playerUpdates, RollListener rolls
+			, GameListener playerUpdates, RollListener rolls
 			, List<JMenuItem> menu)
 	{
 		this.rolls = rolls;
@@ -63,14 +63,7 @@ public class Cluedo implements ActionListener, GameListener
 				possibleValues, possibleValues[0]);
 		Cards[] selectedValues = new Cards[ numPlayers ];
 		@SuppressWarnings( "serial" )
-		List<Cards> pawns = new LinkedList<Cards>(){{
-			add(Cards.COLONELMUSTARD);
-			add(Cards.MISSSCARLETT);
-			add(Cards.MRSPEACOCK);
-			add(Cards.MRSWHITE);
-			add(Cards.PROFESSORPLUM);
-			add(Cards.THEREVERENDGREEN);
-			}};
+		List<Cards> pawns = Cards.getAll( Cards.Types.CHARACTERS );
 		Cards[] pawnsArray = new Cards[6];
 		pawns.toArray(pawnsArray);
 		for ( int i = 0; i < numPlayers; ++i )
@@ -233,7 +226,9 @@ public class Cluedo implements ActionListener, GameListener
 			this.name = name;
 		}
 	}
-	// greys out all of the menu items
+	/**
+	 * @param menu : Grays out all of the menu items in this menu
+	 */
 	private void disableMenuItems( JMenu menu )
 	{
 		int limit = menu.getItemCount();
@@ -301,10 +296,11 @@ public class Cluedo implements ActionListener, GameListener
 			
 		}
 	}
-	/* One player is activated for use of clicking in the board to select a
-	 * highlighted area to move to and then animated to that point. This
-	 * method is called from the Player Class.
-	 * @see game.GameListener#clickedOption(int, int, javax.swing.JMenu)
+	/* One player is activated during which, the player clicks on the board,
+	 * triggering the clickOption callback, to select a highlighted area to
+	 * move to and then animated to that point. This method is called from the
+	 * Player Class that implements MouseListener.
+	 * @see game.PlayerListener#clickedOption(int, int, javax.swing.JMenu)
 	 */
 	@Override
 	public void clickedOption( int x, int y, JMenu menu )

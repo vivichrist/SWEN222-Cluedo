@@ -9,7 +9,7 @@ import java.util.List;
 
 import javax.swing.JMenu;
 
-import ui.PlayerListener;
+import ui.GameListener;
 
 
 public class Player implements MouseListener
@@ -31,7 +31,7 @@ public class Player implements MouseListener
 	private boolean active = false;
 	// individually dealt cards that exclude the solution
 	private LinkedList<Cards> cards;
-	private PlayerListener moveUpdate;
+	private GameListener moveUpdate;
 	private Place location;
 	public Place getLocation()
 	{
@@ -40,9 +40,9 @@ public class Player implements MouseListener
 
 	private Cards id;
 	// private List<Place> places = null;
-	private GameListener gameUpdate;
+	private PlayerListener gameUpdate;
 
-	public Player( Cards c, Place p, List<Cards> cards, PlayerListener moveUpdate, GameListener game )
+	public Player( Cards c, Place p, List<Cards> cards, GameListener moveUpdate, PlayerListener game )
 	{
 		id = c;
 		location = p;

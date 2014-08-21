@@ -1,4 +1,4 @@
-/* PlayerListener is just used to update the CluedoBoard class of player movements
+/* GameListener is just used to update the CluedoBoard class of player movements
  * and setup the GameBoard upon the start of a game.
  */
 
@@ -9,12 +9,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import game.GameListener;
+import game.PlayerListener;
 import game.Place;
 import game.Player;
 import identities.Cards;
 
-public interface PlayerListener
+public interface GameListener
 {
 	
 	/**
@@ -34,5 +34,5 @@ public interface PlayerListener
 	 * @return a list of created players completely initialised
 	 */
 	public ArrayList<Player> initPlayers( List<Cards> players
-			, GameListener game, LinkedList<LinkedList<Cards>> splits );
+			, PlayerListener game, LinkedList<LinkedList<Cards>> splits );
 }
