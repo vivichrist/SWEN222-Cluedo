@@ -45,7 +45,7 @@ public class CluedoFrame extends JFrame
 		// and players name.
 		CluedoPanel panel = new CluedoPanel();
 
-		add(panel, BorderLayout.SOUTH);
+		add( panel, BorderLayout.WEST );
 		try
 		{
 			board = createBoardFromFile( "map.txt" );

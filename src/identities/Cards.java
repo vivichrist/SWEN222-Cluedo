@@ -3,14 +3,12 @@ package identities;
 import game.Player;
 
 import java.awt.Image;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-
 import javax.imageio.ImageIO;
 
 public enum Cards
@@ -46,36 +44,68 @@ public enum Cards
 	private Types type;
 	private List<Player> visibility = new LinkedList<Player>();
 
-	public static final Image ballroom = loadImage("ballroom.png");
-	public static final Image billiardroom = loadImage("billiard room.png");
-	public static final Image candlestick = loadImage("candlestick.png");
-	public static final Image colonelMustard = loadImage("colonelmustard.png");
-	public static final Image conservatory = loadImage("conservatory");
-	public static final Image diningroom = loadImage("dinning room.png");
-	public static final Image dagger = loadImage("dragger.png");
-	public static final Image hall = loadImage("hall.png");
-	public static final Image kitchen = loadImage("kitchen.png");
-	public static final Image leadPipe = loadImage("leadpipe.png");
-	public static final Image library = loadImage("library.png");
-	public static final Image lounge = loadImage("lounge.png");
-	public static final Image missScarlett = loadImage("missscarlett.png");
-	public static final Image mrsPeacock = loadImage("mrspeacock.png");
-	public static final Image mrsWhite = loadImage("mrswhite.png");
-	public static final Image professorPlum = loadImage("professorplum.png");
-	public static final Image revGreen = loadImage("revgreen.png");
-	public static final Image rope = loadImage("rope.png");
-	public static final Image rovolver = loadImage("revolver.png");
-	public static final Image spanner = loadImage("spanner.png");
-	public static final Image study = loadImage("study.png");
+	public static final Image ballroom = loadImage("ballroom.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image billiardroom = loadImage("billiardroom.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image candlestick = loadImage("candlestick.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image colonelMustard = loadImage("colonelmustard.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image conservatory = loadImage("conservatory.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image diningroom = loadImage("dinningroom.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image dagger = loadImage("dragger.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image hall = loadImage("hall.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image kitchen = loadImage("kitchen.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image leadPipe = loadImage("leadpipe.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image library = loadImage("library.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image lounge = loadImage("lounge.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image missScarlett = loadImage("missscarlett.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image mrsPeacock = loadImage("mrspeacock.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image mrsWhite = loadImage("mrswhite.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image professorPlum = loadImage("professorplum.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image revGreen = loadImage("revgreen.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image rope = loadImage("rope.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image rovolver = loadImage("revolver.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image spanner = loadImage("spanner.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image study = loadImage("study.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image hidden = loadImage("hidden.jpg")
+			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
+	public static final Image zero = loadImage("zero.png");
+	public static final Image one = loadImage("one.png");
+	public static final Image two = loadImage("two.png");
+	public static final Image three = loadImage("three.png");
+	public static final Image four = loadImage("four.png");
+	public static final Image five = loadImage("five.png");
+	public static final Image six = loadImage("six.png");
 
-	private static Image loadImage( String str )
-	{
-		BufferedImage img = null;
+	public static Image loadImage(String filename) {
+
 		try {
-		    img = ImageIO.read(new File(str));
+			Image img = ImageIO.read( new File( filename ) );
+			return img;
 		} catch (IOException e) {
+			// we've encountered an error loading the image. There's not much we
+			// can actually do at this point, except to abort the game.
+			throw new RuntimeException("Unable to load image: " + filename);
 		}
-		return img;
 	}
 
 	Cards( String value, Types t )
@@ -114,7 +144,7 @@ public enum Cards
 		LinkedList<Cards> cards = new LinkedList<Cards>();
 		for ( Cards c: Cards.values() )
 		{
-			cards.add( c );
+			if ( !c.equals( HIDDEN ) ) cards.add( c );
 		}
 		Collections.shuffle( cards, rand );
 		// System.out.println( cards );
@@ -171,8 +201,28 @@ public enum Cards
 		if ( ( visibility.contains( player ) ) ) return type;
 		return Types.NONE;
 	}
+	
+	public static Image convertInt( int num )
+	{
+		switch (num)
+		{
+		case 1 :
+			return one;
+		case 2 :
+			return two;
+		case 3 :
+			return three;
+		case 4 :
+			return four;
+		case 5 :
+			return five;
+		case 6 :
+			return six;
+		}
+		return zero;
+	}
 
-	public Image imageName ( Cards c)
+	public static Image imageFromCard ( Cards c)
 	{
 		switch ( c )
 		{
@@ -197,12 +247,9 @@ public enum Cards
 		case SPANNER : return spanner;
 		case STUDY : return study;
 		case THEREVERENDGREEN : return revGreen;
-		case HIDDEN :
-			break;
-		default :
-			break;
+		case HIDDEN : return hidden;
 		}
-		return null;
+		return hidden;
 	}
 }
 

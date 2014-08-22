@@ -173,7 +173,7 @@ public class Cluedo implements ActionListener, PlayerListener
 		int dice1 = ( Cards.rand.nextInt( 6 ) + 1 );
 		int dice2 = ( Cards.rand.nextInt( 6 ) + 1 );
 		rolls.message( dice1, dice2 );
-		places = player.canMove( dice1 + dice2, menu );
+		places = player.canMove( dice1 + dice2 + 1, menu );
 		clickwait = true;
 	}
 

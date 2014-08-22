@@ -358,6 +358,9 @@ public class CluedoBoard extends JComponent implements GameListener
 		rh.add( new RenderingHints(
 	             RenderingHints.KEY_ALPHA_INTERPOLATION,
 	             RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY) );
+		rh.add( new RenderingHints(
+	             RenderingHints.KEY_ANTIALIASING,
+	             RenderingHints.VALUE_ANTIALIAS_ON) );
 		g.setRenderingHints(rh);
 		g.setColor( Color.DARK_GRAY );
 		Rectangle r = g.getClipBounds();
