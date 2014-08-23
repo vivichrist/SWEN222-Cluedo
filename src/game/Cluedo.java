@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,6 +15,9 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+
+import ui.CardListener;
+import ui.DetectivePanel;
 import ui.GameListener;
 import ui.RollListener;
 
@@ -32,19 +36,22 @@ public class Cluedo implements ActionListener, PlayerListener
 	private List<Cards> solution;
 	private List<Place> places = null;
 	private RollListener rolls;
+	private CardListener detective;
 	private GameListener playerUpdates;
 	/**
 	 * @param rooms : data representation and list of all rooms in the game
 	 * @param squares : all corridor squares
 	 * @param playerUpdates : for updating the board display
 	 * @param rolls : for updating the display of dice and cards 
+	 * @param detective 
 	 * @param menu : listening to action commands from the frame menu
 	 */
 	public Cluedo( List<Room> rooms, List<Square> squares
 			, GameListener playerUpdates, RollListener rolls
-			, List<JMenuItem> menu)
+			, CardListener detective, List<JMenuItem> menu )
 	{
 		this.rolls = rolls;
+		this.detective = detective;
 		this.playerUpdates = playerUpdates;
 		for ( JMenuItem m: menu )
 			m.addActionListener(this);
@@ -62,7 +69,6 @@ public class Cluedo implements ActionListener, PlayerListener
 				JOptionPane.INFORMATION_MESSAGE, null,
 				possibleValues, possibleValues[0]);
 		Cards[] selectedValues = new Cards[ numPlayers ];
-		@SuppressWarnings( "serial" )
 		List<Cards> pawns = Cards.getAll( Cards.Types.CHARACTERS );
 		Cards[] pawnsArray = new Cards[6];
 		pawns.toArray(pawnsArray);
@@ -72,7 +78,7 @@ public class Cluedo implements ActionListener, PlayerListener
 									JOptionPane.INFORMATION_MESSAGE, null,
 									pawnsArray, pawnsArray[0] );
 			pawns.remove(selectedValues[i]);
-			pawnsArray = new Cards[6-i];
+			pawnsArray = new Cards[6 - i];
 			pawns.toArray(pawnsArray);
 		}
 		// Shuffle deck
@@ -96,8 +102,13 @@ public class Cluedo implements ActionListener, PlayerListener
 		Player p = players.get(currentPlayer);
 		p.setActive(true);
 		rolls.cards( p.playerCards(), p.cardID() );
+		detective.cards( getOthersCards( p ), p.cardID() );
 	}
 
+	/**
+	 * After the current player has moved they can make a suggestion
+	 * @param player : current player
+	 */
 	private void makeSuggestion( Player player )
 	{
 		List<Cards> susp = Cards.getAll( Cards.Types.CHARACTERS );
@@ -120,63 +131,104 @@ public class Cluedo implements ActionListener, PlayerListener
 		choices = new Cards[9];
 		rooms.toArray(choices);
 		Cards room = ((Room)player.getLocation()).id;
+		List<Cards> ocards = new LinkedList<Cards>();
 		for ( Player pl: players )
 		{
 			if ( pl.haveCard( suspect ) )
-			{
-				suspect.addVisibility( player );
-				player.addCard( suspect );
-			}
+				ocards.add( suspect );
 			if ( pl.haveCard( weapon ) )
-			{
-				weapon.addVisibility( player );
-				player.addCard( weapon );
-			}
+				ocards.add( weapon );
 			if ( pl.haveCard( room ) )
-			{
-				room.addVisibility( player );
-				player.addCard( room );
-			}
+				ocards.add( room );
+			if ( ocards.isEmpty() ) continue;
+			choices = new Cards[ocards.size()];
+			ocards.toArray(choices);
+			Cards card = (Cards)JOptionPane.showInputDialog(null, "Which Card to Show?",
+					"Please select the Card you " + pl.id() + " wish to Show " + player.id(),
+					JOptionPane.INFORMATION_MESSAGE, null,
+					choices, choices[0] );
+			card.addVisibility( player.cardID() );
+			break;
 		}
+		detective.cards( getOthersCards( player ), player.cardID() );
 	}
 
+	/**
+	 * The player skips dice roll and opts for the passage between diagonally
+	 * adjacent rooms.
+	 * @param player : the current player
+	 */
 	public void takePassage( Player player )
 	{
 		if ( player.roomHasPassage() ) player.moveMe( null ); // null means move through passage
 	}
 
-	private void newTurn()
+	/**
+	 * start from the first player and repeat cycle of player turns
+	 */
+	private void newRound()
 	{
-		currentPlayer = 0; // reset to fist player
+		currentPlayer = 0; // reset to first player
 		Player p = players.get(currentPlayer);
 		p.setActive(true);
 		rolls.cards( p.playerCards(), p.cardID() );
+		detective.cards( getOthersCards( p ), p.cardID() );
+	}
+	
+	/**
+	 * @param p : get all cards other than the cards the current player has
+	 * @return each players cards excluding the current player
+	 */
+	private HashMap<Cards, List<Cards>> getOthersCards( Player p )
+	{
+		HashMap<Cards, List<Cards>> others = new HashMap<Cards, List<Cards>>();
+		for ( Player pl: players )
+		{
+			if ( pl != p ) others.put( pl.cardID(), pl.playerCards() );
+		}
+		return others;
 	}
 
+	/**
+	 * Move on to the next players turn and skip over players that have been
+	 * disqualified for false accusation.
+	 */
 	private void endTurn()
 	{
 		Player p = players.get(currentPlayer);
 		p.setActive(false);
-		++currentPlayer;
-		if ( currentPlayer == numPlayers )
+		do
 		{
-			newTurn();
-			return;
-		}
-		p = players.get(currentPlayer);
+			++currentPlayer;
+			if ( currentPlayer == numPlayers )
+			{
+				newRound();
+				return;
+			}
+			p = players.get(currentPlayer);
+		} while ( !p.isPlaying() );
 		p.setActive(true);
 		rolls.cards( p.playerCards(), p.cardID() );
+		detective.cards( getOthersCards( p ), p.cardID() );
 	}
 
+	/**
+	 * @param player : the player to be moved
+	 * @param menu : to be returned and updated for new options,
+	 * by the player class through the PlayerListener interface.
+	 */
 	private void move( Player player, JMenu menu )
 	{
 		int dice1 = ( Cards.rand.nextInt( 6 ) + 1 );
 		int dice2 = ( Cards.rand.nextInt( 6 ) + 1 );
-		rolls.message( dice1, dice2 );
+		rolls.diceRool( dice1, dice2 );
 		places = player.canMove( dice1 + dice2 + 1, menu );
 		clickwait = true;
 	}
 
+	/**
+	 * @param player : the player making the accusation
+	 */
 	private void makeAccusation( Player player )
 	{	// TODO: test this method
 		List<Cards> susp = Cards.getAll( Cards.Types.CHARACTERS );
@@ -207,6 +259,15 @@ public class Cluedo implements ActionListener, PlayerListener
 			return;
 		}
 		player.setPlaying( false );
+		boolean restart = false;
+		for ( Player p: players ) 
+			restart |= p.isPlaying();
+		if ( !restart ) // everybody made false accusation
+		{
+			JOptionPane.showMessageDialog( null, "No One Wins!", "You All Lose!!", JOptionPane.PLAIN_MESSAGE );
+			start();
+			return;
+		}
 		endTurn();
 	}
 
@@ -313,18 +374,18 @@ public class Cluedo implements ActionListener, PlayerListener
 					target = p;
 			if ( target == null )
 			{
-				System.out.println("No such place: " +x+ ":" +y+ " PLace: " + target);
+				System.out.println("No such place: " +x+ ":" +y+ " Place: " + target);
 				return;
 			}
 			Player p = players.get(currentPlayer);
 			if ( target instanceof Room )
 			{
 				Room r = (Room) target;
-				
 				Place nTarget = r.nearestNeighbour( target.getLocation() );
 				while ( p.moveMe( nTarget ));
 				p.moveMe( target );
-			} else while ( p.moveMe( target ));
+			} else 
+				while ( p.moveMe( target ));
 			clickwait = false;
 			// this stops a user from using the menu while selecting a move with mouse 
 			if ( p.isInARoom() )

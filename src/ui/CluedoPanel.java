@@ -32,7 +32,7 @@ public class CluedoPanel extends JPanel implements RollListener {
 	private JLabel die2 = new JLabel( new ImageIcon( Cards.convertInt( 0 ) ) );
 
 	@Override
-	public void message(int die1, int die2) {
+	public void diceRool(int die1, int die2) {
 		this.die1.setIcon( new ImageIcon( Cards.convertInt( die1 ) ) );
 		this.die2.setIcon( new ImageIcon( Cards.convertInt( die2 ) ) );
 	}

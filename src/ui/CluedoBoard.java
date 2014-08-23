@@ -57,7 +57,7 @@ public class CluedoBoard extends JComponent implements GameListener
 	private HashMap<Cards, Color>					colors			= new HashMap<Cards, Color>();
 	private AffineTransform							transform;
 
-	public CluedoBoard( char[][] board, RollListener rolls, List<JMenuItem> mi )
+	public CluedoBoard( char[][] board, RollListener rolls, DetectivePanel detective, List<JMenuItem> mi )
 	{
 		tiles = board;
 		this.height = board[ 0 ].length;
@@ -131,7 +131,7 @@ public class CluedoBoard extends JComponent implements GameListener
 		HashMap<Point, Square> squares = createSquares();
 		List<Room> rooms = createRooms( doors, squares );
 		new Cluedo( rooms, new LinkedList<Square>( squares.values() )
-				  , this, rolls, mi );
+				  , this, rolls, detective,  mi );
 		setVisible( true );
 		repaint();
 		// create and connect places

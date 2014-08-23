@@ -44,12 +44,14 @@ public class CluedoFrame extends JFrame
 		// add a panel to display dice, cards held by player
 		// and players name.
 		CluedoPanel panel = new CluedoPanel();
+		DetectivePanel panel2 = new DetectivePanel();
 
 		add( panel, BorderLayout.WEST );
+		add( panel2, BorderLayout.EAST );
 		try
 		{
 			board = createBoardFromFile( "map.txt" );
-			cluedo = new CluedoBoard( board, panel, mi );
+			cluedo = new CluedoBoard( board, panel, panel2, mi );
 			add( cluedo, BorderLayout.CENTER );
 		} catch ( IOException e )
 		{

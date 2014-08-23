@@ -48,7 +48,7 @@ public class Player implements MouseListener
 		location = p;
 		this.cards = new LinkedList<Cards>(cards);
 		for ( Cards cd: cards )
-			cd.addVisibility(this);
+			cd.addVisibility( this.id );
 		this.moveUpdate = moveUpdate;
 		this.gameUpdate = game;
 	}
@@ -83,7 +83,7 @@ public class Player implements MouseListener
 		moveUpdate.playerMoved( id, location );
 		try
 		{
-			Thread.sleep(500);
+			Thread.sleep(250);
 		} catch ( InterruptedException e )
 		{
 			e.printStackTrace();
@@ -99,11 +99,7 @@ public class Player implements MouseListener
 	{
 		return cards.contains(card);
 	}
-	public boolean addCard( Cards card )
-	{
-		card.addVisibility(this);
-		return cards.add(card);
-	}
+
 	public String id()
 	{
 		return id.name();

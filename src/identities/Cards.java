@@ -3,6 +3,7 @@ package identities;
 import game.Player;
 
 import java.awt.Image;
+import java.beans.Visibility;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -42,7 +43,7 @@ public enum Cards
 	public static final Random rand = new Random( System.currentTimeMillis() );
 	private String name;
 	private Types type;
-	private List<Player> visibility = new LinkedList<Player>();
+	private List<Cards> visibility = new LinkedList<Cards>();
 
 	public static final Image ballroom = loadImage("ballroom.jpg")
 			.getScaledInstance( 50, 70, Image.SCALE_AREA_AVERAGING );
@@ -144,6 +145,7 @@ public enum Cards
 		LinkedList<Cards> cards = new LinkedList<Cards>();
 		for ( Cards c: Cards.values() )
 		{
+			c.visibility.clear();
 			if ( !c.equals( HIDDEN ) ) cards.add( c );
 		}
 		Collections.shuffle( cards, rand );
@@ -186,17 +188,23 @@ public enum Cards
 	{
 		return this.name;
 	}
+	
+	public Cards visible ( Cards player )
+	{
+		if ( ( visibility.contains( player ) ) ) return this;
+		return Cards.HIDDEN;
+	}
 
-	public boolean addVisibility( Player player )
+	public boolean addVisibility( Cards player )
 	{
 		return visibility.add( player );
 	}
-	public String see( Player player )
+	public String see( Cards player )
 	{
 		if ( ( visibility.contains( player ) ) ) return name;
 		return "Unknown";
 	}
-	public Types getType( Player player )
+	public Types getType( Cards player )
 	{
 		if ( ( visibility.contains( player ) ) ) return type;
 		return Types.NONE;
