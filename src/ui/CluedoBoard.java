@@ -62,9 +62,10 @@ public class CluedoBoard extends JComponent implements GameListener
 		tiles = board;
 		this.height = board[ 0 ].length;
 		this.width = board.length;
-		System.out.println( "width:" + width + " height:" + height );
+		// System.out.println( "width:" + width + " height:" + height );
 		tileH = 25;
 		tileW = 25;
+		// size vector graphics to fit a tile space using this transform
 		transform = AffineTransform.getScaleInstance( (tileW - 1) / 200.0f,
 				(tileH - 1) / 200.0f );
 		transform
@@ -112,7 +113,7 @@ public class CluedoBoard extends JComponent implements GameListener
 				{
 					squares.add( new Point( i, j ) );
 					startSquares.add( new Point( i, j ) );
-					System.out.println( "StartSquare At: " + i + ":" + j + " " );
+					//System.out.println( "StartSquare At: " + i + ":" + j + " " );
 				} else if ( c == 'S' )
 					squares.add( new Point( i, j ) );
 				else if ( c == '?' )
@@ -253,14 +254,15 @@ public class CluedoBoard extends JComponent implements GameListener
 	public ArrayList<Player> initPlayers( List<Cards> players, PlayerListener game
 								   , LinkedList<LinkedList<Cards>> splits )
 	{
-		ArrayList<Player> createdPlayers = new ArrayList<Player>();
 		if ( players.size() != splits.size() )
 			throw new IllegalArgumentException("Not enough cards for all players");
 		int i;
+		ArrayList<Player> createdPlayers = new ArrayList<Player>();
+		playerPos.clear(); // fresh game
 		for ( Cards pcard: players )
 		{	
 			Point startp;
-			do
+			do // put players in some random start square
 			{
 				i = Cards.rand.nextInt( 5 ); // there are 6 start squares
 				startp = startSquares.get( i );
@@ -268,10 +270,11 @@ public class CluedoBoard extends JComponent implements GameListener
 			Square square = starts.get( i );
 			playerPos.put( pcard, startSquares.get( i ) );
 			square.setOccupied( true );
+			// create new player
 			Player pl = new Player( pcard, square, splits.getFirst(), this, game );
 			addMouseListener( pl );
 			createdPlayers.add( pl );
-			splits.removeFirst();
+			splits.removeFirst(); // dealt cards to the player are removed from the deck
 		}
 		repaint();
 		return createdPlayers;

@@ -17,7 +17,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import ui.CardListener;
-import ui.DetectivePanel;
 import ui.GameListener;
 import ui.RollListener;
 
@@ -60,14 +59,16 @@ public class Cluedo implements ActionListener, PlayerListener
 	 * Selects the number of players (3-6) and asks each player which of the
 	 * six possible suspects they wish to play as and creates them
 	 *************************************************************************/
-	public void start()
+	public boolean start()
 	{
 
 		Integer[] possibleValues = { 3, 4, 5, 6 };
-		numPlayers = (Integer) JOptionPane.showInputDialog(null, "Number of Players",
+		Object o = JOptionPane.showInputDialog(null, "Number of Players",
 				"Please select the number of players to play Cluedo",
 				JOptionPane.INFORMATION_MESSAGE, null,
 				possibleValues, possibleValues[0]);
+		if ( o == null ) return false; // cancel
+		numPlayers = (Integer) o;
 		Cards[] selectedValues = new Cards[ numPlayers ];
 		List<Cards> pawns = Cards.getAll( Cards.Types.CHARACTERS );
 		Cards[] pawnsArray = new Cards[6];
@@ -77,6 +78,7 @@ public class Cluedo implements ActionListener, PlayerListener
 									"Pick a Pawn", "Possible Characters",
 									JOptionPane.INFORMATION_MESSAGE, null,
 									pawnsArray, pawnsArray[0] );
+			if ( selectedValues[i] == null ) return false; // cancel
 			pawns.remove(selectedValues[i]);
 			pawnsArray = new Cards[6 - i];
 			pawns.toArray(pawnsArray);
@@ -95,7 +97,7 @@ public class Cluedo implements ActionListener, PlayerListener
 				lc.add( cards.remove(0) );
 			}
 		}
-		// System.out.println( splits );
+		// deal cards to players and put them on the board
 		players = playerUpdates.initPlayers( new LinkedList<Cards>( Arrays.asList( selectedValues ) )
 											, this, splits );
 		currentPlayer = 0;
@@ -103,115 +105,9 @@ public class Cluedo implements ActionListener, PlayerListener
 		p.setActive(true);
 		rolls.cards( p.playerCards(), p.cardID() );
 		detective.cards( getOthersCards( p ), p.cardID() );
-	}
-
-	/**
-	 * After the current player has moved they can make a suggestion
-	 * @param player : current player
-	 */
-	private void makeSuggestion( Player player )
-	{
-		List<Cards> susp = Cards.getAll( Cards.Types.CHARACTERS );
-		List<Cards> weapons = Cards.getAll( Cards.Types.WEAPONS );
-		List<Cards> rooms = Cards.getAll( Cards.Types.ROOMS );
-
-		Cards[] choices = new Cards[6];
-		susp.toArray(choices);
-		Cards suspect = (Cards)JOptionPane.showInputDialog(null, "Which Suspect?",
-				"Please select the Suspect you wish to Suggest.",
-				JOptionPane.INFORMATION_MESSAGE, null,
-				choices, choices[0] );
-
-		weapons.toArray(choices);
-		Cards weapon = (Cards)JOptionPane.showInputDialog(null, "Which Weapon?",
-				"Please select the Weapon they mite have used to kill the victim.",
-				JOptionPane.INFORMATION_MESSAGE, null,
-				choices, choices[0] );
-
-		choices = new Cards[9];
-		rooms.toArray(choices);
-		Cards room = ((Room)player.getLocation()).id;
-		List<Cards> ocards = new LinkedList<Cards>();
-		for ( Player pl: players )
-		{
-			if ( pl.haveCard( suspect ) )
-				ocards.add( suspect );
-			if ( pl.haveCard( weapon ) )
-				ocards.add( weapon );
-			if ( pl.haveCard( room ) )
-				ocards.add( room );
-			if ( ocards.isEmpty() ) continue;
-			choices = new Cards[ocards.size()];
-			ocards.toArray(choices);
-			Cards card = (Cards)JOptionPane.showInputDialog(null, "Which Card to Show?",
-					"Please select the Card you " + pl.id() + " wish to Show " + player.id(),
-					JOptionPane.INFORMATION_MESSAGE, null,
-					choices, choices[0] );
-			card.addVisibility( player.cardID() );
-			break;
-		}
-		detective.cards( getOthersCards( player ), player.cardID() );
-	}
-
-	/**
-	 * The player skips dice roll and opts for the passage between diagonally
-	 * adjacent rooms.
-	 * @param player : the current player
-	 */
-	public void takePassage( Player player )
-	{
-		if ( player.roomHasPassage() ) player.moveMe( null ); // null means move through passage
-	}
-
-	/**
-	 * start from the first player and repeat cycle of player turns
-	 */
-	private void newRound()
-	{
-		currentPlayer = 0; // reset to first player
-		Player p = players.get(currentPlayer);
-		p.setActive(true);
-		rolls.cards( p.playerCards(), p.cardID() );
-		detective.cards( getOthersCards( p ), p.cardID() );
+		return true;
 	}
 	
-	/**
-	 * @param p : get all cards other than the cards the current player has
-	 * @return each players cards excluding the current player
-	 */
-	private HashMap<Cards, List<Cards>> getOthersCards( Player p )
-	{
-		HashMap<Cards, List<Cards>> others = new HashMap<Cards, List<Cards>>();
-		for ( Player pl: players )
-		{
-			if ( pl != p ) others.put( pl.cardID(), pl.playerCards() );
-		}
-		return others;
-	}
-
-	/**
-	 * Move on to the next players turn and skip over players that have been
-	 * disqualified for false accusation.
-	 */
-	private void endTurn()
-	{
-		Player p = players.get(currentPlayer);
-		p.setActive(false);
-		do
-		{
-			++currentPlayer;
-			if ( currentPlayer == numPlayers )
-			{
-				newRound();
-				return;
-			}
-			p = players.get(currentPlayer);
-		} while ( !p.isPlaying() );
-		p.setActive(true);
-		rolls.cards( p.playerCards(), p.cardID() );
-		detective.cards( getOthersCards( p ), p.cardID() );
-	}
-
 	/**
 	 * @param player : the player to be moved
 	 * @param menu : to be returned and updated for new options,
@@ -225,38 +121,50 @@ public class Cluedo implements ActionListener, PlayerListener
 		places = player.canMove( dice1 + dice2 + 1, menu );
 		clickwait = true;
 	}
-
+	/**
+	 * The player skips dice roll and opts for the passage between diagonally
+	 * adjacent rooms.
+	 * @param player : the current player
+	 */
+	public void takePassage( Player player )
+	{
+		if ( player.roomHasPassage() ) player.moveMe( null ); // null means move through passage
+	}
 	/**
 	 * @param player : the player making the accusation
 	 */
-	private void makeAccusation( Player player )
-	{	// TODO: test this method
+	private byte makeAccusation( Player player )
+	{
 		List<Cards> susp = Cards.getAll( Cards.Types.CHARACTERS );
 		List<Cards> weapons = Cards.getAll( Cards.Types.WEAPONS );
 		List<Cards> rooms = Cards.getAll( Cards.Types.ROOMS );
 		Cards[] choices = new Cards[6];
 		susp.toArray(choices);
 		Cards suspect = (Cards)JOptionPane.showInputDialog(null, "Which Suspect?",
-				"Please select the Suspect you wish to Accuse.",
+				"Please select the Suspect\nyou wish to Accuse.",
 				JOptionPane.INFORMATION_MESSAGE, null,
 				choices, choices[0] );
-
+		if ( suspect == null ) return 0;
 		weapons.toArray(choices);
-		Cards weapon = (Cards)JOptionPane.showInputDialog(null, "Which Weapon?",
-				"Please select the Weapon they used to kill the victim.",
-				JOptionPane.INFORMATION_MESSAGE, null,
-				choices, choices[0] );
+		Cards weapon = (Cards)JOptionPane.showInputDialog(null
+				, "Please select the Weapon they\nused to kill the victim."
+				, "Which Weapon?"
+				, JOptionPane.INFORMATION_MESSAGE, null
+				, choices, choices[0] );
+		if ( weapon == null ) return 0;
 		choices = new Cards[9];
 		rooms.toArray(choices);
-		Cards room = (Cards)JOptionPane.showInputDialog(null, "Which Room?",
-				"Please select the Room the murder took place in.",
+		Cards room = (Cards)JOptionPane.showInputDialog(null
+				, "Please select the Room the\n murder took place in."
+				, "Which Room?"
+				,
 				JOptionPane.INFORMATION_MESSAGE, null,
 				choices, choices[0] );
+		if ( room == null ) return 0;
 		if ( solution.contains(suspect) && solution.contains(weapon) && solution.contains(room) )
 		{
 			JOptionPane.showMessageDialog( null, "You WIN!!", "You WIN!!", JOptionPane.PLAIN_MESSAGE );
-			start();
-			return;
+			return 1;
 		}
 		player.setPlaying( false );
 		boolean restart = false;
@@ -265,10 +173,107 @@ public class Cluedo implements ActionListener, PlayerListener
 		if ( !restart ) // everybody made false accusation
 		{
 			JOptionPane.showMessageDialog( null, "No One Wins!", "You All Lose!!", JOptionPane.PLAIN_MESSAGE );
-			start();
-			return;
+			return 1;
 		}
-		endTurn();
+		return 2;
+	}
+	/**
+	 * After the current player has moved they can make a suggestion
+	 * @param player : current player
+	 */
+	private boolean makeSuggestion( Player player )
+	{
+		List<Cards> susp = Cards.getAll( Cards.Types.CHARACTERS );
+		List<Cards> weapons = Cards.getAll( Cards.Types.WEAPONS );
+		List<Cards> rooms = Cards.getAll( Cards.Types.ROOMS );
+
+		Cards[] choices = new Cards[6];
+		susp.toArray(choices);
+		Cards suspect = (Cards)JOptionPane.showInputDialog( null
+				, "Please select the Suspect you wish to Suggest."
+				, "Which Suspect?"
+				, JOptionPane.INFORMATION_MESSAGE, null
+				, choices, choices[0] );
+		if ( suspect == null ) return false;
+		weapons.toArray(choices);
+		Cards weapon = (Cards)JOptionPane.showInputDialog(null
+				, "Please select the Weapon they mite\nhave used to kill the victim."
+				, "Which Weapon?"
+				, JOptionPane.INFORMATION_MESSAGE, null
+				, choices, choices[0] );
+		if ( weapon == null ) return false;
+		choices = new Cards[9];
+		rooms.toArray(choices);
+		Cards room = ((Room)player.getLocation()).id;
+		List<Cards> ocards = new LinkedList<Cards>();
+		boolean refute = false;
+		for ( Player pl: players )
+		{
+			if ( pl.haveCard( suspect ) )
+				ocards.add( suspect );
+			if ( pl.haveCard( weapon ) )
+				ocards.add( weapon );
+			if ( pl.haveCard( room ) )
+				ocards.add( room );
+			if ( ocards.isEmpty() ) continue;
+			refute = true;
+			choices = new Cards[ocards.size()];
+			ocards.toArray(choices);
+			Cards card = (Cards)JOptionPane.showInputDialog( null
+					, "Please select the Card you, " + pl.id() + "\nwish to Show, " + player.id()
+					, "Which Card to Show?"
+					, JOptionPane.PLAIN_MESSAGE, null
+					, choices, choices[0] );
+			if ( card != null ) card.addVisibility( player.cardID() );
+			break;
+		}
+		if ( refute == false )
+			JOptionPane.showMessageDialog( null
+					, "There is no refuting evidence!", "Hmmm...."
+					, JOptionPane.PLAIN_MESSAGE );
+		detective.cards( getOthersCards( player ), player.cardID() );
+		return true;
+	}
+
+	/**
+	 * Move on to the next players turn and skip over players that have been
+	 * disqualified for false accusation.
+	 */
+	private Player endTurn( Player player )
+	{
+		player.setActive(false);
+		do
+		{
+			++currentPlayer;
+			if ( currentPlayer == numPlayers )
+			{
+				currentPlayer = 0; // reset to first player
+				player = players.get( currentPlayer );
+				player.setActive(true);
+				rolls.cards( player.playerCards(), player.cardID() );
+				detective.cards( getOthersCards( player ), player.cardID() );
+				return player;
+			} else
+				player = players.get(currentPlayer);
+		} while ( !player.isPlaying() );
+		player.setActive(true);
+		rolls.cards( player.playerCards(), player.cardID() );
+		detective.cards( getOthersCards( player ), player.cardID() );
+		return player;
+	}
+
+	/**
+	 * @param p : get all cards other than the cards the current player has
+	 * @return each players cards excluding the current player
+	 */
+	private HashMap<Cards, List<Cards>> getOthersCards( Player p )
+	{
+		HashMap<Cards, List<Cards>> others = new HashMap<Cards, List<Cards>>();
+		for ( Player pl: players )
+		{
+			if ( pl != p ) others.put( pl.cardID(), pl.playerCards() );
+		}
+		return others;
 	}
 
 	/**
@@ -287,6 +292,7 @@ public class Cluedo implements ActionListener, PlayerListener
 			this.name = name;
 		}
 	}
+	
 	/**
 	 * @param menu : Grays out all of the menu items in this menu
 	 */
@@ -300,16 +306,18 @@ public class Cluedo implements ActionListener, PlayerListener
 	@Override
 	public void actionPerformed( ActionEvent e )
 	{
-
+		// obtaining a menu is ridiculous 
 		JMenu menu = (JMenu)((JPopupMenu)((JMenuItem)e.getSource()).getParent()).getInvoker();
 		Player p;
 		System.out.println( menu.getText() );
 		if ( e.getActionCommand() == MenuIndex.START.name )
 		{
-			start();
-			disableMenuItems( menu );
-			menu.getItem( MenuIndex.DICE.ordinal() ).setEnabled(true);
-			menu.getItem( MenuIndex.ACCUSE.ordinal() ).setEnabled(true);
+			if ( start() )
+			{
+				disableMenuItems( menu );
+				menu.getItem( MenuIndex.DICE.ordinal() ).setEnabled(true);
+				menu.getItem( MenuIndex.ACCUSE.ordinal() ).setEnabled(true);
+			}
 		}
 		else if ( e.getActionCommand() == MenuIndex.DICE.name )
 		{
@@ -317,24 +325,6 @@ public class Cluedo implements ActionListener, PlayerListener
 			disableMenuItems(menu);
 			// menu comes back when clickOption returns a valid click 
 			move( p, menu );
-		}
-		else if ( e.getActionCommand() == MenuIndex.ACCUSE.name )
-		{
-			p = players.get(currentPlayer);
-			disableMenuItems(menu);
-			makeAccusation( p );
-			menu.getItem( MenuIndex.DICE.ordinal() ).setEnabled(true);
-			if ( p.roomHasPassage() )
-				menu.getItem(MenuIndex.PASSAGE.ordinal()).setEnabled(true);
-			menu.getItem( MenuIndex.ACCUSE.ordinal() ).setEnabled(true);
-		}
-		else if ( e.getActionCommand() == MenuIndex.SUGGEST.name )
-		{
-			p = players.get(currentPlayer);
-			disableMenuItems(menu);
-			menu.getItem( MenuIndex.ACCUSE.ordinal() ).setEnabled(true);
-			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
-			makeSuggestion( p );
 		}
 		else if ( e.getActionCommand() == MenuIndex.PASSAGE.name )
 		{
@@ -345,16 +335,38 @@ public class Cluedo implements ActionListener, PlayerListener
 			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
 			
 		}
+		else if ( e.getActionCommand() == MenuIndex.ACCUSE.name )
+		{
+			p = players.get(currentPlayer);
+			byte option = makeAccusation( p );
+			if ( option == 0 ) return; // cancelled
+			disableMenuItems(menu);
+			if ( option == 1 ) // win or no winner
+			{
+				menu.getItem( MenuIndex.START.ordinal() ).setEnabled(true);
+				return;
+			} // 2 false accusation
+			menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
+		}
+		else if ( e.getActionCommand() == MenuIndex.SUGGEST.name )
+		{
+			p = players.get(currentPlayer);
+			if ( makeSuggestion( p ) ) // false if cancelled
+			{
+				disableMenuItems(menu);
+				menu.getItem( MenuIndex.ACCUSE.ordinal() ).setEnabled(true);
+				menu.getItem( MenuIndex.END.ordinal() ).setEnabled(true);
+			}
+		}
 		else if ( e.getActionCommand() == MenuIndex.END.name )
 		{
-			endTurn();
 			p = players.get(currentPlayer);
+			p = endTurn( p );
 			disableMenuItems( menu );
 			menu.getItem( MenuIndex.DICE.ordinal() ).setEnabled(true);
 			if ( p.roomHasPassage() )
 				menu.getItem(MenuIndex.PASSAGE.ordinal()).setEnabled(true);
 			menu.getItem( MenuIndex.ACCUSE.ordinal() ).setEnabled(true);
-			
 		}
 	}
 	/* One player is activated during which, the player clicks on the board,
@@ -374,7 +386,10 @@ public class Cluedo implements ActionListener, PlayerListener
 					target = p;
 			if ( target == null )
 			{
-				System.out.println("No such place: " +x+ ":" +y+ " Place: " + target);
+				JOptionPane.showMessageDialog( null
+						, "Please Click inside a highlighted place on the board"
+						, "Can Not Move There!"
+						, JOptionPane.PLAIN_MESSAGE );
 				return;
 			}
 			Player p = players.get(currentPlayer);

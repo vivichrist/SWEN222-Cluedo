@@ -14,6 +14,10 @@ import game.Place;
 import game.Player;
 import identities.Cards;
 
+/**
+ * @author Vivian Stewart
+ * Listens to the game logic (Cluedo class) for updates to display
+ */
 public interface GameListener
 {
 	
