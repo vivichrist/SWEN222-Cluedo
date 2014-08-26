@@ -55,9 +55,9 @@ public class Room implements Place
 	public void unmark( int moves )
 	{
 		if ( move == 0 ) return;
+		move = 0;
 		if ( moves > 0 )
 		{
-			move = 0;
 			for ( Place p: exits)
 			{
 				p.unmark( moves - 1 );

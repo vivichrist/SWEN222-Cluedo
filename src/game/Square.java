@@ -68,7 +68,7 @@ public class Square implements Place
 				result = p;
 			}
 		}
-		this.occupant = false;
+		occupant = false;
 		result.setOccupied( true );
 		return result;
 	}

@@ -86,7 +86,7 @@ public class Cluedo implements ActionListener, PlayerListener
 		solution = Cards.generateSolution( cards );
 		LinkedList<LinkedList<Cards>> splits = new LinkedList<LinkedList<Cards>>();
 		for ( int i = 0; i < numPlayers; ++i )
-			splits. add( new LinkedList<Cards>() );
+			splits.add( new LinkedList<Cards>() );
 		while ( !cards.isEmpty() )
 		{
 			for ( LinkedList<Cards> lc: splits)
